@@ -29,19 +29,23 @@ export default defineConfig({
       {
         extends: true,
         test: {
+          name: 'node',
+          setupFiles: './test/setup-node.ts',
           environment: 'node',
-          include: ['**/*.server.test.{ts|tsx}'],
+          include: ['**/*.server.test.{ts,tsx}'],
         },
       },
       // Run rest of tests in JSDOM environment
       {
         extends: true,
         test: {
+          name: 'dom',
+          setupFiles: './test/setup-dom.ts',
           environment: 'jsdom',
+          exclude: ['**/*.server.test.{ts,tsx}'],
         },
       },
     ],
-    setupFiles: './test/setup.ts',
     dir: 'test',
     coverage: {
       provider: 'v8',
