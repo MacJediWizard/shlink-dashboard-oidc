@@ -25,6 +25,16 @@ export default defineConfig({
   test: {
     globals: true,
     projects: [
+      // Run component and client-specific tests in JSDOM environment
+      {
+        extends: true,
+        test: {
+          name: 'browser',
+          setupFiles: './test/setup-dom.ts',
+          environment: 'jsdom',
+          include: ['**/*.client.test.{ts,tsx}', '**/[A-Z][a-zA-Z0-9]*.test.{ts,tsx}'],
+        },
+      },
       // Run tests for server-only files in node environment
       {
         extends: true,
@@ -33,16 +43,6 @@ export default defineConfig({
           setupFiles: './test/setup-node.ts',
           environment: 'node',
           include: ['**/*.server.test.{ts,tsx}'],
-        },
-      },
-      // Run rest of tests in JSDOM environment
-      {
-        extends: true,
-        test: {
-          name: 'dom',
-          setupFiles: './test/setup-dom.ts',
-          environment: 'jsdom',
-          exclude: ['**/*.server.test.{ts,tsx}'],
         },
       },
     ],
