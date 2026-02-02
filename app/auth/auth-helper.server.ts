@@ -1,6 +1,7 @@
 import type { Session, SessionStorage } from 'react-router';
 import { redirect } from 'react-router';
 import type { Authenticator } from 'remix-auth';
+import type { User } from '../entities/User';
 import { requestQueryParam } from '../utils/request.server';
 import { CREDENTIALS_STRATEGY } from './auth.server';
 import type { SessionData, ShlinkSessionData } from './session-context';
@@ -26,6 +27,27 @@ export class AuthHelper {
     session.set('sessionData', sessionData);
 
     const redirectTo = requestQueryParam(request, 'redirect-to');
+    const successRedirect = redirectTo && !redirectTo.toLowerCase().startsWith('http') ? redirectTo : '/';
+
+    return redirect(successRedirect, {
+      headers: { 'Set-Cookie': await this.#sessionStorage.commitSession(session) },
+    });
+  }
+
+  /**
+   * Create a session for a user authenticated via OIDC
+   */
+  async loginWithOidc(request: Request, user: User, redirectTo?: string): Promise<Response> {
+    const session = await this.sessionFromRequest(request);
+    const sessionData: SessionData = {
+      publicId: user.publicId,
+      displayName: user.displayName,
+      username: user.username,
+      role: user.role,
+      tempPassword: false, // OIDC users never have temp passwords
+    };
+    session.set('sessionData', sessionData);
+
     const successRedirect = redirectTo && !redirectTo.toLowerCase().startsWith('http') ? redirectTo : '/';
 
     return redirect(successRedirect, {
