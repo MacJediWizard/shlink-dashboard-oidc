@@ -5,7 +5,7 @@ import { AuthHelper } from '../auth/auth-helper.server';
 import { buildAuthorizationUrl, generateOidcState, isOidcEnabled } from '../auth/oidc.server';
 import { CenteredContentLayout } from '../common/CenteredContentLayout';
 import { serverContainer } from '../container/container.server';
-import { isLocalAuthEnabled } from '../utils/env.server';
+import { getOidcProviderName, isLocalAuthEnabled } from '../utils/env.server';
 import { requestQueryParam } from '../utils/request.server';
 
 const INCORRECT_CREDENTIAL_ERROR_PREFIXES = ['Incorrect password', 'User not found'];
@@ -45,7 +45,8 @@ export async function loader(
     });
   }
 
-  return { oidcEnabled, localAuthEnabled };
+  const oidcProviderName = getOidcProviderName();
+  return { oidcEnabled, localAuthEnabled, oidcProviderName };
 }
 
 export async function action(
@@ -100,6 +101,7 @@ export default function Login() {
 
   const oidcEnabled = loaderData && 'oidcEnabled' in loaderData && loaderData.oidcEnabled;
   const localAuthEnabled = loaderData && 'localAuthEnabled' in loaderData && loaderData.localAuthEnabled;
+  const oidcProviderName = loaderData && 'oidcProviderName' in loaderData ? loaderData.oidcProviderName : 'SSO';
   const errorParam = searchParams.get('error');
   const redirectTo = searchParams.get('redirect-to');
 
@@ -113,7 +115,7 @@ export default function Login() {
               <input type="hidden" name="intent" value="oidc" />
               {redirectTo && <input type="hidden" name="redirect-to" value={redirectTo} />}
               <Button solid type="submit" className="w-full" disabled={isSaving}>
-                {isSaving ? 'Redirecting...' : 'Sign in with Authentik'}
+                {isSaving ? 'Redirecting...' : `Sign in with ${oidcProviderName}`}
               </Button>
             </fetcher.Form>
           )}

@@ -1,3 +1,4 @@
+import { parse as parseCookies } from 'cookie';
 import type { LoaderFunctionArgs } from 'react-router';
 import { redirect } from 'react-router';
 import { AuthHelper } from '../../auth/auth-helper.server';
@@ -6,6 +7,9 @@ import { serverContainer } from '../../container/container.server';
 import { UsersService } from '../../users/UsersService.server';
 
 const OIDC_STATE_COOKIE = 'oidc_state';
+
+// Generic error message to prevent information disclosure
+const GENERIC_AUTH_ERROR = 'Authentication failed. Please try again.';
 
 export async function loader(
   { request }: LoaderFunctionArgs,
@@ -22,29 +26,33 @@ export async function loader(
   const error = url.searchParams.get('error');
   const errorDescription = url.searchParams.get('error_description');
 
-  // Handle OIDC errors
+  // Handle OIDC errors - log details but return generic message
   if (error) {
-    console.error('OIDC error:', error, errorDescription);
-    return redirect(`/login?error=${encodeURIComponent(errorDescription ?? error)}`);
+    console.error('OIDC provider error:', { error, errorDescription });
+    return redirect(`/login?error=${encodeURIComponent(GENERIC_AUTH_ERROR)}`);
   }
 
   if (!code || !state) {
-    return redirect('/login?error=missing_code_or_state');
+    console.error('OIDC callback missing code or state');
+    return redirect(`/login?error=${encodeURIComponent(GENERIC_AUTH_ERROR)}`);
   }
 
-  // Get OIDC state from cookie
+  // Get OIDC state from cookie using standard cookie parser
   const cookieHeader = request.headers.get('cookie') ?? '';
-  const oidcStateCookie = parseCookie(cookieHeader, OIDC_STATE_COOKIE);
+  const cookies = parseCookies(cookieHeader);
+  const oidcStateCookie = cookies[OIDC_STATE_COOKIE];
 
   if (!oidcStateCookie) {
-    return redirect('/login?error=missing_oidc_state');
+    console.error('OIDC state cookie missing');
+    return redirect(`/login?error=${encodeURIComponent(GENERIC_AUTH_ERROR)}`);
   }
 
   let oidcState: { state: string; nonce: string; codeVerifier: string; redirectTo?: string };
   try {
     oidcState = JSON.parse(oidcStateCookie);
   } catch {
-    return redirect('/login?error=invalid_oidc_state');
+    console.error('Failed to parse OIDC state cookie');
+    return redirect(`/login?error=${encodeURIComponent(GENERIC_AUTH_ERROR)}`);
   }
 
   try {
@@ -68,18 +76,8 @@ export async function loader(
 
     return response;
   } catch (e: any) {
-    console.error('OIDC callback error:', e);
-    return redirect(`/login?error=${encodeURIComponent(e.message ?? 'oidc_callback_failed')}`);
+    // Log detailed error for debugging, but return generic message to user
+    console.error('OIDC callback error:', e.message, e.stack);
+    return redirect(`/login?error=${encodeURIComponent(GENERIC_AUTH_ERROR)}`);
   }
-}
-
-function parseCookie(cookieHeader: string, name: string): string | null {
-  const cookies = cookieHeader.split(';').map((c) => c.trim());
-  for (const cookie of cookies) {
-    const [cookieName, ...valueParts] = cookie.split('=');
-    if (cookieName === name) {
-      return decodeURIComponent(valueParts.join('='));
-    }
-  }
-  return null;
 }

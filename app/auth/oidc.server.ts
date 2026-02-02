@@ -99,6 +99,25 @@ export async function exchangeCodeForTokens(
     throw new Error('No claims in ID token');
   }
 
+  // Explicit token validation - don't rely solely on openid-client
+  const now = Math.floor(Date.now() / 1000);
+  const clockSkewSeconds = 60; // Allow 60 seconds of clock skew
+
+  // Verify token expiration
+  if (claims.exp && claims.exp < now - clockSkewSeconds) {
+    throw new Error('ID token has expired');
+  }
+
+  // Verify token was not issued too far in the future
+  if (claims.iat && claims.iat > now + clockSkewSeconds) {
+    throw new Error('ID token issued in the future');
+  }
+
+  // Verify nonce matches (secondary validation)
+  if (claims.nonce !== nonce) {
+    throw new Error('ID token nonce mismatch');
+  }
+
   // Extract groups from the token - could be in id_token claims or access_token
   let groups: string[] = [];
   if (claims.groups && Array.isArray(claims.groups)) {

@@ -34,6 +34,7 @@ const envVariables = z.object({
   SHLINK_DASHBOARD_OIDC_ADMIN_GROUP: z.string().optional(),
   SHLINK_DASHBOARD_OIDC_ADVANCED_GROUP: z.string().optional(),
   SHLINK_DASHBOARD_OIDC_DEFAULT_ROLE: z.enum(supportedRoles).optional().default('managed-user'),
+  SHLINK_DASHBOARD_OIDC_PROVIDER_NAME: z.string().optional().default('SSO'),
   SHLINK_DASHBOARD_LOCAL_AUTH_ENABLED: z.stringbool({ truthy: ['true'] }).optional().default(true),
 });
 
@@ -44,6 +45,8 @@ export const isProd = () => env.NODE_ENV === 'production';
 export const isOidcEnabled = () => env.SHLINK_DASHBOARD_OIDC_ENABLED === true;
 
 export const isLocalAuthEnabled = () => env.SHLINK_DASHBOARD_LOCAL_AUTH_ENABLED !== false;
+
+export const getOidcProviderName = () => env.SHLINK_DASHBOARD_OIDC_PROVIDER_NAME ?? 'SSO';
 
 export const getOidcConfig = () => {
   if (!isOidcEnabled()) {

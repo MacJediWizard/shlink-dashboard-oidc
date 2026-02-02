@@ -7,6 +7,37 @@ import { CREDENTIALS_STRATEGY } from './auth.server';
 import type { SessionData, ShlinkSessionData } from './session-context';
 
 /**
+ * Validate redirect URL to prevent open redirect attacks.
+ * Only allows relative paths starting with / and not containing protocol handlers.
+ */
+function isValidRedirectUrl(url: string | undefined): url is string {
+  if (!url) {
+    return false;
+  }
+
+  // Must start with a single forward slash (not //)
+  if (!url.startsWith('/') || url.startsWith('//')) {
+    return false;
+  }
+
+  // Must not contain protocol handlers
+  if (url.includes(':')) {
+    return false;
+  }
+
+  // Must not contain backslashes (path traversal)
+  if (url.includes('\\')) {
+    return false;
+  }
+
+  return true;
+}
+
+function getSafeRedirectUrl(url: string | undefined): string {
+  return isValidRedirectUrl(url) ? url : '/';
+}
+
+/**
  * Wraps a SessionStorage and Authenticator to perform common authentication and session checking/commiting/destroying
  * operations
  */
@@ -27,7 +58,7 @@ export class AuthHelper {
     session.set('sessionData', sessionData);
 
     const redirectTo = requestQueryParam(request, 'redirect-to');
-    const successRedirect = redirectTo && !redirectTo.toLowerCase().startsWith('http') ? redirectTo : '/';
+    const successRedirect = getSafeRedirectUrl(redirectTo);
 
     return redirect(successRedirect, {
       headers: { 'Set-Cookie': await this.#sessionStorage.commitSession(session) },
@@ -48,7 +79,7 @@ export class AuthHelper {
     };
     session.set('sessionData', sessionData);
 
-    const successRedirect = redirectTo && !redirectTo.toLowerCase().startsWith('http') ? redirectTo : '/';
+    const successRedirect = getSafeRedirectUrl(redirectTo);
 
     return redirect(successRedirect, {
       headers: { 'Set-Cookie': await this.#sessionStorage.commitSession(session) },

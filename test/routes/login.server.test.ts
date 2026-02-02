@@ -69,7 +69,7 @@ describe('login', () => {
       const response = await loader(fromPartial({ request }), authHelper);
 
       // When OIDC is not enabled, returns local auth enabled status
-      expect(response).toEqual({ oidcEnabled: false, localAuthEnabled: true });
+      expect(response).toEqual({ oidcEnabled: false, localAuthEnabled: true, oidcProviderName: 'SSO' });
     });
   });
 });

@@ -10,7 +10,7 @@ describe('login', () => {
         {
           path: '/',
           Component: Login,
-          loader: () => ({ oidcEnabled, localAuthEnabled }),
+          loader: () => ({ oidcEnabled, localAuthEnabled, oidcProviderName: 'SSO' }),
           action: () => ({ error }),
         },
       ]);
