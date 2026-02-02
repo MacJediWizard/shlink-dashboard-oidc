@@ -1,6 +1,6 @@
 import * as client from 'openid-client';
-import { getOidcConfig, isOidcEnabled } from '../utils/env.server';
 import type { Role } from '../entities/User';
+import { getOidcConfig, isOidcEnabled } from '../utils/env.server';
 
 export interface OidcClaims {
   sub: string;

@@ -1,7 +1,7 @@
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
-import { generatePassword, hashPassword, verifyPassword } from '../auth/passwords.server';
 import type { OidcClaims } from '../auth/oidc.server';
 import { mapGroupsToRole } from '../auth/oidc.server';
+import { generatePassword, hashPassword, verifyPassword } from '../auth/passwords.server';
 import { paginationToLimitAndOffset } from '../db/utils.server';
 import type { Role, User } from '../entities/User';
 import { DuplicatedEntryError } from '../validation/DuplicatedEntryError.server';
@@ -213,35 +213,33 @@ export class UsersService {
 
   async #createOidcUser(claims: OidcClaims, role: Role): Promise<User> {
     // Use preferred_username, fall back to email, fall back to subject
-    const username = claims.preferred_username ?? claims.email ?? claims.sub;
+    let username = claims.preferred_username ?? claims.email ?? claims.sub;
     const displayName = claims.name ?? null;
 
     // Generate a random password hash - OIDC users won't use it but the field is required
     const randomPassword = await hashPassword(generatePassword(32));
 
-    const user = this.#usersRepository.create({
-      publicId: crypto.randomUUID(),
-      username,
-      password: randomPassword,
-      role,
-      displayName,
-      oidcSubject: claims.sub,
-      tempPassword: false,
-      createdAt: new Date(),
-    });
-
     try {
-      await this.#usersRepository.em.persist(user).flush();
+      return await this.#usersRepository.createOidcUser({
+        username,
+        displayName,
+        role,
+        oidcSubject: claims.sub,
+        password: randomPassword,
+      });
     } catch (e) {
       if (e instanceof UniqueConstraintViolationException) {
         // Username conflict - append part of sub to make it unique
-        user.username = `${username}_${claims.sub.slice(0, 8)}`;
-        await this.#usersRepository.em.persist(user).flush();
-      } else {
-        throw e;
+        username = `${username}_${claims.sub.slice(0, 8)}`;
+        return await this.#usersRepository.createOidcUser({
+          username,
+          displayName,
+          role,
+          oidcSubject: claims.sub,
+          password: randomPassword,
+        });
       }
+      throw e;
     }
-
-    return user;
   }
 }
