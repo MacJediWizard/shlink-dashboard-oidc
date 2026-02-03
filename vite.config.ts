@@ -60,13 +60,12 @@ export default defineConfig({
       reporter: ['text', 'text-summary', 'clover', 'html'],
 
       // Required code coverage. Lower than this will make the check fail
-      // Note: Thresholds lowered from upstream (85/83/80/85) to accommodate OIDC
-      // integration code that relies on external openid-client library
+      // Branch threshold reduced from 83 to 80 due to untested code in original codebase
       thresholds: {
-        statements: 75,
-        branches: 70,
-        functions: 75,
-        lines: 75,
+        statements: 85,
+        branches: 80,
+        functions: 80,
+        lines: 85,
       },
     },
 
