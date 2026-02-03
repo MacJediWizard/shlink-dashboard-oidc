@@ -60,10 +60,9 @@ export default defineConfig({
       reporter: ['text', 'text-summary', 'clover', 'html'],
 
       // Required code coverage. Lower than this will make the check fail
-      // Branch threshold reduced from 83 to 80 due to untested code in original codebase
       thresholds: {
         statements: 85,
-        branches: 80,
+        branches: 83,
         functions: 80,
         lines: 85,
       },
