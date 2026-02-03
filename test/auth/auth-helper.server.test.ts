@@ -55,6 +55,78 @@ describe('AuthHelper', () => {
     });
   });
 
+  describe('loginWithOidc', () => {
+    const mockUser = {
+      publicId: 'pub-123',
+      username: 'oidcuser',
+      displayName: 'OIDC User',
+      role: 'admin' as const,
+      tempPassword: false,
+      password: 'hashed',
+      createdAt: new Date(),
+      oidcSubject: 'oidc-sub-123',
+    };
+
+    it('creates session for OIDC user and redirects to root', async () => {
+      const authHelper = setUp();
+      const request = buildRequest('http://example.com');
+
+      const response = await authHelper.loginWithOidc(request, mockUser);
+
+      expect(response.headers.get('Location')).toEqual('/');
+      expect(getSession).toHaveBeenCalled();
+      expect(setSessionData).toHaveBeenCalledWith('sessionData', {
+        publicId: 'pub-123',
+        displayName: 'OIDC User',
+        username: 'oidcuser',
+        role: 'admin',
+        tempPassword: false,
+        isOidcUser: true,
+      });
+      expect(commitSession).toHaveBeenCalled();
+    });
+
+    it('redirects to provided redirectTo path', async () => {
+      const authHelper = setUp();
+      const request = buildRequest('http://example.com');
+
+      const response = await authHelper.loginWithOidc(request, mockUser, '/dashboard');
+
+      expect(response.headers.get('Location')).toEqual('/dashboard');
+    });
+
+    it('sanitizes invalid redirect URLs', async () => {
+      const authHelper = setUp();
+      const request = buildRequest('http://example.com');
+
+      const response = await authHelper.loginWithOidc(request, mockUser, 'https://evil.com');
+
+      expect(response.headers.get('Location')).toEqual('/');
+    });
+
+    it('sets isOidcUser to true in session data', async () => {
+      const authHelper = setUp();
+      const request = buildRequest('http://example.com');
+
+      await authHelper.loginWithOidc(request, mockUser);
+
+      expect(setSessionData).toHaveBeenCalledWith('sessionData', expect.objectContaining({
+        isOidcUser: true,
+      }));
+    });
+
+    it('sets tempPassword to false for OIDC users', async () => {
+      const authHelper = setUp();
+      const request = buildRequest('http://example.com');
+
+      await authHelper.loginWithOidc(request, mockUser);
+
+      expect(setSessionData).toHaveBeenCalledWith('sessionData', expect.objectContaining({
+        tempPassword: false,
+      }));
+    });
+  });
+
   describe('getSession', () => {
     it.each([
       [defaultSessionData],
