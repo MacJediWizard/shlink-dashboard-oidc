@@ -1,8 +1,8 @@
 import { fromPartial } from '@total-typescript/shoehorn';
 import type { LoaderFunctionArgs } from 'react-router';
 import type { AuthHelper } from '../../../app/auth/auth-helper.server';
-import type { UsersService } from '../../../app/users/UsersService.server';
 import { loader } from '../../../app/routes/auth/callback';
+import type { UsersService } from '../../../app/users/UsersService.server';
 
 vi.mock('../../../app/auth/oidc.server', () => ({
   isOidcEnabled: vi.fn(),

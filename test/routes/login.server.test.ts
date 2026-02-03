@@ -105,7 +105,7 @@ describe('login', () => {
       formData.set('intent', 'oidc');
       const request = createMockRequest(formData);
 
-      const response = await action(fromPartial({ request }), authHelper);
+      const response = await action(fromPartial({ request }), authHelper) as Response;
 
       expect(response.headers.get('Location')).toBe('https://auth.example.com/authorize');
       expect(response.headers.get('Set-Cookie')).toContain('oidc_state=');
@@ -125,7 +125,7 @@ describe('login', () => {
       formData.set('redirect-to', '/dashboard');
       const request = createMockRequest(formData);
 
-      const response = await action(fromPartial({ request }), authHelper);
+      const response = await action(fromPartial({ request }), authHelper) as Response;
 
       const cookie = response.headers.get('Set-Cookie') ?? '';
       const decodedCookie = decodeURIComponent(cookie);
@@ -138,7 +138,7 @@ describe('login', () => {
       isAuthenticated.mockResolvedValue(true);
 
       const request = fromPartial<Request>({ url: 'https://example.com/login' });
-      const response = await loader(fromPartial({ request }), authHelper);
+      const response = await loader(fromPartial({ request }), authHelper) as Response;
 
       expect(response).instanceof(Response);
       expect(response.headers.get('Location')).toBe('/');
@@ -168,7 +168,7 @@ describe('login', () => {
       mockedBuildAuthorizationUrl.mockResolvedValue('https://auth.example.com/authorize');
 
       const request = fromPartial<Request>({ url: 'https://example.com/login' });
-      const response = await loader(fromPartial({ request }), authHelper);
+      const response = await loader(fromPartial({ request }), authHelper) as Response;
 
       expect(response.headers.get('Location')).toBe('https://auth.example.com/authorize');
       expect(response.headers.get('Set-Cookie')).toContain('oidc_state=');
@@ -204,7 +204,7 @@ describe('login', () => {
       const request = fromPartial<Request>({
         url: 'https://example.com/login?redirect-to=/dashboard',
       });
-      const response = await loader(fromPartial({ request }), authHelper);
+      const response = await loader(fromPartial({ request }), authHelper) as Response;
 
       const cookie = response.headers.get('Set-Cookie') ?? '';
       const decodedCookie = decodeURIComponent(cookie);

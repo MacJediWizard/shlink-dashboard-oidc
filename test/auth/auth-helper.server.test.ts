@@ -3,6 +3,7 @@ import type { SessionStorage } from 'react-router';
 import type { Authenticator } from 'remix-auth';
 import { AuthHelper } from '../../app/auth/auth-helper.server';
 import type { SessionData, ShlinkSessionData } from '../../app/auth/session-context';
+import type { User } from '../../app/entities/User';
 
 describe('AuthHelper', () => {
   const authenticate = vi.fn();
@@ -56,7 +57,7 @@ describe('AuthHelper', () => {
   });
 
   describe('loginWithOidc', () => {
-    const mockUser = {
+    const mockUser = fromPartial<User>({
       publicId: 'pub-123',
       username: 'oidcuser',
       displayName: 'OIDC User',
@@ -65,7 +66,7 @@ describe('AuthHelper', () => {
       password: 'hashed',
       createdAt: new Date(),
       oidcSubject: 'oidc-sub-123',
-    };
+    });
 
     it('creates session for OIDC user and redirects to root', async () => {
       const authHelper = setUp();
