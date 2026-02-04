@@ -338,8 +338,8 @@ export default function ApiKeysList({ loaderData }: RouteComponentProps<Route.Co
       {/* Quick Actions Card */}
       <SimpleCard title="Quick Actions" bodyClassName="flex flex-col gap-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 rounded-lg border-2 border-green-500 bg-green-50 dark:bg-green-900/20 text-center">
-            <FontAwesomeIcon icon={faServer} className="text-green-600 text-3xl mb-2" />
+          <div className="p-4 rounded-lg border-2 border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-center">
+            <FontAwesomeIcon icon={faServer} className="text-blue-600 text-3xl mb-2" />
             <h3 className="font-bold mb-1">Generate New API Key</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
               Create a new API key directly on your Shlink server.
@@ -355,14 +355,13 @@ export default function ApiKeysList({ loaderData }: RouteComponentProps<Route.Co
               Generate New Key
             </Button>
           </div>
-          <div className="p-4 rounded-lg border border-gray-300 dark:border-gray-600 text-center">
+          <div className="p-4 rounded-lg border-2 border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-center">
             <FontAwesomeIcon icon={faKey} className="text-blue-600 text-3xl mb-2" />
             <h3 className="font-bold mb-1">Register Existing Key</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
               Already have an API key? Register it to track usage.
             </p>
             <Button
-              variant="secondary"
               onClick={() => {
                 setActiveTab('registry');
                 setShowCreateForm(true);
