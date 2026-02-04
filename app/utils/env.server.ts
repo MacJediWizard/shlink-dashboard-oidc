@@ -51,6 +51,9 @@ export const isOidcEnabled = () => env.SHLINK_DASHBOARD_OIDC_ENABLED === true;
 
 export const isLocalAuthEnabled = () => env.SHLINK_DASHBOARD_LOCAL_AUTH_ENABLED !== false;
 
+// Returns true if local user management is allowed (when local auth is enabled or OIDC is disabled)
+export const canManageLocalUsers = () => !isOidcEnabled() || isLocalAuthEnabled();
+
 export const getOidcProviderName = () => env.SHLINK_DASHBOARD_OIDC_PROVIDER_NAME ?? 'SSO';
 
 export const getBrandingConfig = () => ({
