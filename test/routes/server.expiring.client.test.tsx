@@ -23,12 +23,12 @@ describe('ExpiringUrls', () => {
 
   it('renders page title', async () => {
     setUp();
-    await waitFor(() => expect(screen.getByText(/Expiring URLs - Test Server/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/Expiring URLs/)).toBeInTheDocument());
   });
 
   it('shows empty state when no expiring URLs', async () => {
     setUp();
-    await waitFor(() => expect(screen.getByText('No URLs expiring in the next 30 days.')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('All Clear!')).toBeInTheDocument());
   });
 
   it('shows error message when error present', async () => {
@@ -39,7 +39,7 @@ describe('ExpiringUrls', () => {
 
     setUp(loaderData);
 
-    await waitFor(() => expect(screen.getByText(/Error fetching URLs: Failed to fetch URLs/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Failed to fetch URLs')).toBeInTheDocument());
   });
 
   it('shows expiring URLs table when URLs exist', async () => {

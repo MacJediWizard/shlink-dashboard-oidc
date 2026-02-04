@@ -34,7 +34,7 @@ describe('ApiKeysList', () => {
 
   it('shows empty state when no API keys', async () => {
     setUp();
-    await waitFor(() => expect(screen.getByText('No API keys registered.')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('No API Keys Registered Yet')).toBeInTheDocument());
   });
 
   it('shows API keys table when keys exist', async () => {
@@ -71,7 +71,7 @@ describe('ApiKeysList', () => {
 
   it('shows back to server link', async () => {
     setUp();
-    await waitFor(() => expect(screen.getByRole('link', { name: 'Back to Server' })).toHaveAttribute(
+    await waitFor(() => expect(screen.getByRole('link', { name: /Back to Server/ })).toHaveAttribute(
       'href',
       '/server/server-1',
     ));
@@ -79,32 +79,34 @@ describe('ApiKeysList', () => {
 
   it('shows register key button', async () => {
     setUp();
-    await waitFor(() => expect(screen.getByRole('button', { name: /Register Key/i })).toBeInTheDocument());
+    // There are now multiple "Register Key" buttons (Quick Actions + tab header)
+    await waitFor(() => expect(screen.getAllByRole('button', { name: /Register Key/i }).length).toBeGreaterThan(0));
   });
 
   it('shows create form when register key button clicked', async () => {
     const { user } = setUp();
 
-    await waitFor(() => expect(screen.getByRole('button', { name: /Register Key/i })).toBeInTheDocument());
-    await user.click(screen.getByRole('button', { name: /Register Key/i }));
+    await waitFor(() => expect(screen.getAllByRole('button', { name: /Register Key/i }).length).toBeGreaterThan(0));
+    // Click the first Register Key button (from Quick Actions)
+    await user.click(screen.getAllByRole('button', { name: /Register Key/i })[0]);
 
-    expect(screen.getByText('Register API Key')).toBeInTheDocument();
-    expect(screen.getByLabelText('Name *')).toBeInTheDocument();
-    expect(screen.getByLabelText('Key Hint * (last 4 chars)')).toBeInTheDocument();
-    expect(screen.getByLabelText('Service')).toBeInTheDocument();
-    // There are two buttons with "Register Key" - one in the header and one in the form
+    expect(screen.getByText('Register Existing API Key')).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Name/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Key Hint/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Service/)).toBeInTheDocument();
+    // There are multiple buttons with "Register Key" - Quick Actions, tab header, and form
     const registerButtons = screen.getAllByRole('button', { name: /Register Key/i });
-    expect(registerButtons.length).toBe(2);
+    expect(registerButtons.length).toBeGreaterThanOrEqual(2);
   });
 
   it('can cancel create form', async () => {
     const { user } = setUp();
 
-    await waitFor(() => expect(screen.getByRole('button', { name: /Register Key/i })).toBeInTheDocument());
-    await user.click(screen.getByRole('button', { name: /Register Key/i }));
+    await waitFor(() => expect(screen.getAllByRole('button', { name: /Register Key/i }).length).toBeGreaterThan(0));
+    await user.click(screen.getAllByRole('button', { name: /Register Key/i })[0]);
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
-    expect(screen.queryByText('Register API Key')).not.toBeInTheDocument();
+    expect(screen.queryByText('Register Existing API Key')).not.toBeInTheDocument();
   });
 
   it('shows inactive status for deactivated keys', async () => {
@@ -270,21 +272,21 @@ describe('ApiKeysList', () => {
 
     const { user } = setUp();
 
-    await waitFor(() => expect(screen.getByRole('button', { name: /Register Key/i })).toBeInTheDocument());
-    await user.click(screen.getByRole('button', { name: /Register Key/i }));
+    await waitFor(() => expect(screen.getAllByRole('button', { name: /Register Key/i }).length).toBeGreaterThan(0));
+    await user.click(screen.getAllByRole('button', { name: /Register Key/i })[0]);
 
     // Fill out the form
-    await user.type(screen.getByLabelText('Name *'), 'My API Key');
-    await user.type(screen.getByLabelText('Key Hint * (last 4 chars)'), 'wxyz');
-    await user.selectOptions(screen.getByLabelText('Service'), 'n8n');
-    await user.type(screen.getByLabelText('Description (optional)'), 'Test description');
+    await user.type(screen.getByLabelText(/^Name/), 'My API Key');
+    await user.type(screen.getByLabelText(/Key Hint/), 'wxyz');
+    await user.selectOptions(screen.getByLabelText(/Service/), 'n8n');
+    await user.type(screen.getByLabelText(/^Description$/), 'Test description');
 
     // Submit
     const submitButtons = screen.getAllByRole('button', { name: /Register Key/i });
     await user.click(submitButtons[1]); // The form submit button
 
     // Form should close
-    await waitFor(() => expect(screen.queryByText('Register API Key')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByText('Register Existing API Key')).not.toBeInTheDocument());
 
     alertSpy.mockRestore();
   });
@@ -294,12 +296,13 @@ describe('ApiKeysList', () => {
 
     const { user } = setUp();
 
-    await waitFor(() => expect(screen.getByRole('button', { name: /Register Key/i })).toBeInTheDocument());
-    await user.click(screen.getByRole('button', { name: /Register Key/i }));
+    await waitFor(() => expect(screen.getAllByRole('button', { name: /Register Key/i }).length).toBeGreaterThan(0));
+    await user.click(screen.getAllByRole('button', { name: /Register Key/i })[0]);
 
-    // Try to submit without filling required fields
+    // Try to submit without filling required fields - find the form submit button (the last Register Key button)
     const submitButtons = screen.getAllByRole('button', { name: /Register Key/i });
-    await user.click(submitButtons[1]);
+    // Click the last button (form submit button)
+    await user.click(submitButtons[submitButtons.length - 1]);
 
     expect(alertSpy).toHaveBeenCalledWith('Name and key hint are required');
 
@@ -340,18 +343,18 @@ describe('ApiKeysList', () => {
   it('can fill out optional fields in create form', async () => {
     const { user } = setUp();
 
-    await waitFor(() => expect(screen.getByRole('button', { name: /Register Key/i })).toBeInTheDocument());
-    await user.click(screen.getByRole('button', { name: /Register Key/i }));
+    await waitFor(() => expect(screen.getAllByRole('button', { name: /Register Key/i }).length).toBeGreaterThan(0));
+    await user.click(screen.getAllByRole('button', { name: /Register Key/i })[0]);
 
-    await user.type(screen.getByLabelText('Name *'), 'My Key');
-    await user.type(screen.getByLabelText('Key Hint * (last 4 chars)'), 'test');
-    await user.type(screen.getByLabelText('Expires At (optional)'), '2026-12-31');
-    await user.type(screen.getByLabelText('Notes (optional)'), 'Some notes');
+    await user.type(screen.getByLabelText(/^Name/), 'My Key');
+    await user.type(screen.getByLabelText(/Key Hint/), 'test');
+    await user.type(screen.getByLabelText(/Expiration Date/), '2026-12-31');
+    await user.type(screen.getByLabelText(/^Notes$/), 'Some notes');
 
     const submitButtons = screen.getAllByRole('button', { name: /Register Key/i });
     await user.click(submitButtons[1]);
 
-    await waitFor(() => expect(screen.queryByText('Register API Key')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByText('Register Existing API Key')).not.toBeInTheDocument());
   });
 
   it('can switch to Shlink API Keys tab', async () => {
@@ -371,12 +374,12 @@ describe('ApiKeysList', () => {
 
     await waitFor(() => expect(screen.getByText(/Key Registry/)).toBeInTheDocument());
 
-    // Click on Shlink API Keys tab button
-    await user.click(screen.getByRole('button', { name: /Shlink API Keys/ }));
+    // Click on Shlink Server Keys tab button
+    await user.click(screen.getByRole('button', { name: /Shlink Server Keys/ }));
 
     // Should show Shlink API key content
     await waitFor(() => expect(screen.getByText('Test Shlink Key')).toBeInTheDocument());
-    expect(screen.getByText('Generate New Key')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Generate New API Key/ })).toBeInTheDocument();
   });
 
   it('shows Shlink API error when present', async () => {
@@ -387,10 +390,10 @@ describe('ApiKeysList', () => {
 
     const { user } = setUp(loaderData);
 
-    await waitFor(() => expect(screen.getByRole('button', { name: /Shlink API Keys/ })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('button', { name: /Shlink Server Keys/ })).toBeInTheDocument());
 
-    // Click on Shlink API Keys tab
-    await user.click(screen.getByRole('button', { name: /Shlink API Keys/ }));
+    // Click on Shlink Server Keys tab
+    await user.click(screen.getByRole('button', { name: /Shlink Server Keys/ }));
 
     // Should show error message
     await waitFor(() => expect(screen.getByText('Failed to connect to Shlink server')).toBeInTheDocument());

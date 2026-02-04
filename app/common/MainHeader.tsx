@@ -67,8 +67,8 @@ const NavBarMenuItems: FC<NavBarMenuItemsProps> = ({ allowLocalUserManagement })
             <FontAwesomeIcon icon={faFolder} className="mr-0.5" /> Folders
           </Dropdown.Item>
           <Dropdown.Item
-            to={`/server/${serverId}/expiring-list`}
-            selected={pathname.includes('/expiring-list')}
+            to={`/server/${serverId}/expiring`}
+            selected={pathname.includes('/expiring')}
           >
             <FontAwesomeIcon icon={faClock} className="mr-0.5" /> Expiring URLs
           </Dropdown.Item>

@@ -27,12 +27,12 @@ describe('FavoritesList', () => {
 
   it('renders page title', async () => {
     setUp();
-    await waitFor(() => expect(screen.getByText(/Favorites - Test Server/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('heading', { name: /^Favorites$/, level: 2 })).toBeInTheDocument());
   });
 
   it('shows empty state when no favorites', async () => {
     setUp();
-    await waitFor(() => expect(screen.getByText('No favorites yet.')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('No Favorites Yet')).toBeInTheDocument());
   });
 
   it('shows favorites table when favorites exist', async () => {
@@ -59,7 +59,7 @@ describe('FavoritesList', () => {
 
   it('shows back to server link', async () => {
     setUp();
-    await waitFor(() => expect(screen.getByRole('link', { name: 'Back to Server' })).toHaveAttribute(
+    await waitFor(() => expect(screen.getByRole('link', { name: /Back to Server/ })).toHaveAttribute(
       'href',
       '/server/server-1',
     ));
@@ -306,9 +306,9 @@ describe('FavoritesList', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: /Add Favorite/i })).toBeInTheDocument());
     await user.click(screen.getByRole('button', { name: /Add Favorite/i }));
 
-    expect(screen.getByText('Add Favorite')).toBeInTheDocument();
-    expect(screen.getByLabelText('Short Code *')).toBeInTheDocument();
-    expect(screen.getByLabelText('Long URL *')).toBeInTheDocument();
+    expect(screen.getByText('Add New Favorite')).toBeInTheDocument();
+    expect(screen.getByLabelText(/Short Code/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Destination URL/)).toBeInTheDocument();
   });
 
   it('can cancel add favorite form', async () => {
@@ -318,7 +318,7 @@ describe('FavoritesList', () => {
     await user.click(screen.getByRole('button', { name: /Add Favorite/i }));
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
-    expect(screen.queryByLabelText('Short Code *')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Short Code/)).not.toBeInTheDocument();
   });
 
   it('can filter favorites with search', async () => {
@@ -350,7 +350,7 @@ describe('FavoritesList', () => {
     expect(screen.getByText('Banana')).toBeInTheDocument();
 
     // Search for Apple
-    await user.type(screen.getByPlaceholderText('Search favorites...'), 'apple');
+    await user.type(screen.getByPlaceholderText(/Search by short code/), 'apple');
 
     expect(screen.getByText('Apple')).toBeInTheDocument();
     expect(screen.queryByText('Banana')).not.toBeInTheDocument();
@@ -375,7 +375,7 @@ describe('FavoritesList', () => {
 
     await waitFor(() => expect(screen.getByText('Apple')).toBeInTheDocument());
 
-    await user.type(screen.getByPlaceholderText('Search favorites...'), 'xyz');
+    await user.type(screen.getByPlaceholderText(/Search by short code/), 'xyz');
 
     expect(screen.getByText('No favorites match your search.')).toBeInTheDocument();
   });
@@ -419,16 +419,16 @@ describe('FavoritesList', () => {
     await user.click(screen.getByRole('button', { name: /Add Favorite/i }));
 
     // Fill out the form
-    await user.type(screen.getByLabelText('Short Code *'), 'testcode');
-    await user.type(screen.getByLabelText('Long URL *'), 'https://example.com/test');
-    await user.type(screen.getByLabelText('Title (optional)'), 'Test Title');
-    await user.type(screen.getByLabelText('Notes (optional)'), 'Test notes');
+    await user.type(screen.getByLabelText(/Short Code/), 'testcode');
+    await user.type(screen.getByLabelText(/Destination URL/), 'https://example.com/test');
+    await user.type(screen.getByLabelText(/^Title$/), 'Test Title');
+    await user.type(screen.getByLabelText(/^Notes$/), 'Test notes');
 
     // Click the "Add to Favorites" form submit button
     await user.click(screen.getByRole('button', { name: /Add to Favorites/i }));
 
     // Form should close
-    await waitFor(() => expect(screen.queryByLabelText('Short Code *')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByLabelText(/Short Code/)).not.toBeInTheDocument());
   });
 
   it('shows alert when submitting add favorite without required fields', async () => {

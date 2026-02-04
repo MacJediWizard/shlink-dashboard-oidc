@@ -27,12 +27,12 @@ describe('FoldersList', () => {
 
   it('renders page title', async () => {
     setUp();
-    await waitFor(() => expect(screen.getByText(/Folders - Test Server/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('heading', { name: /^Folders$/, level: 2 })).toBeInTheDocument());
   });
 
   it('shows empty state when no folders', async () => {
     setUp();
-    await waitFor(() => expect(screen.getByText('No folders yet.')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('No Folders Yet')).toBeInTheDocument());
   });
 
   it('shows folders when folders exist', async () => {
@@ -61,7 +61,7 @@ describe('FoldersList', () => {
 
   it('shows back to server link', async () => {
     setUp();
-    await waitFor(() => expect(screen.getByRole('link', { name: 'Back to Server' })).toHaveAttribute(
+    await waitFor(() => expect(screen.getByRole('link', { name: /Back to Server/ })).toHaveAttribute(
       'href',
       '/server/server-1',
     ));
@@ -79,8 +79,8 @@ describe('FoldersList', () => {
     await user.click(screen.getByRole('button', { name: /New Folder/i }));
 
     expect(screen.getByText('Create New Folder')).toBeInTheDocument();
-    expect(screen.getByLabelText('Name *')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Create' })).toBeInTheDocument();
+    expect(screen.getByLabelText(/Folder Name/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Create Folder/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
   });
 
@@ -168,7 +168,8 @@ describe('FoldersList', () => {
     const { user } = setUp(loaderData);
 
     await waitFor(() => expect(screen.getByText('Test Folder')).toBeInTheDocument());
-    await user.click(screen.getByText('Test Folder'));
+    // Click the edit button (pen icon)
+    await user.click(screen.getByTitle('Edit folder name and color'));
 
     expect(screen.getByDisplayValue('Test Folder')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
@@ -192,7 +193,7 @@ describe('FoldersList', () => {
     const { user } = setUp(loaderData);
 
     await waitFor(() => expect(screen.getByText('Test Folder')).toBeInTheDocument());
-    await user.click(screen.getByText('Test Folder'));
+    await user.click(screen.getByTitle('Edit folder name and color'));
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
     expect(screen.queryByDisplayValue('Test Folder')).not.toBeInTheDocument();
@@ -217,7 +218,7 @@ describe('FoldersList', () => {
     const { user } = setUp(loaderData);
 
     await waitFor(() => expect(screen.getByText('Old Name')).toBeInTheDocument());
-    await user.click(screen.getByText('Old Name'));
+    await user.click(screen.getByTitle('Edit folder name and color'));
 
     const input = screen.getByDisplayValue('Old Name');
     await user.clear(input);
@@ -293,9 +294,9 @@ describe('FoldersList', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: /New Folder/i })).toBeInTheDocument());
     await user.click(screen.getByRole('button', { name: /New Folder/i }));
 
-    const nameInput = screen.getByLabelText('Name *');
+    const nameInput = screen.getByLabelText(/Folder Name/);
     await user.type(nameInput, 'My New Folder');
-    await user.click(screen.getByRole('button', { name: 'Create' }));
+    await user.click(screen.getByRole('button', { name: /Create Folder/ }));
 
     // Form should close
     await waitFor(() => expect(screen.queryByText('Create New Folder')).not.toBeInTheDocument());
@@ -307,8 +308,8 @@ describe('FoldersList', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: /New Folder/i })).toBeInTheDocument());
     await user.click(screen.getByRole('button', { name: /New Folder/i }));
 
-    // Click a different color button
-    const colorButtons = screen.getAllByTitle(/#[0-9A-Fa-f]{6}/);
+    // Click a different color button - title format is "Select #color"
+    const colorButtons = screen.getAllByTitle(/Select #/);
     expect(colorButtons.length).toBeGreaterThan(2);
     await user.click(colorButtons[2]); // Select the third color
 

@@ -1,8 +1,11 @@
 import {
   faChevronDown,
   faChevronRight,
+  faEdit,
   faFolder,
+  faFolderOpen,
   faPlus,
+  faSearch,
   faTrash,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -235,17 +238,25 @@ export default function FoldersList({ loaderData }: RouteComponentProps<Route.Co
     );
   });
 
+  const totalItems = folders.reduce((sum, f) => sum + f.itemCount, 0);
+
   return (
     <main className="container py-4 mx-auto">
       <SimpleCard>
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <h2 className="d-flex align-items-center gap-2 mb-0">
-            <FontAwesomeIcon icon={faFolder} />
-            Folders - {serverName}
-          </h2>
+        {/* Header with Stats */}
+        <div className="d-flex justify-content-between align-items-start mb-4">
+          <div>
+            <h2 className="d-flex align-items-center gap-2 mb-2">
+              <FontAwesomeIcon icon={faFolder} className="text-primary" />
+              Folders
+            </h2>
+            <p className="text-muted mb-0">
+              <strong>{serverName}</strong> &bull; {folders.length} folder{folders.length !== 1 ? 's' : ''} &bull; {totalItems} total URL{totalItems !== 1 ? 's' : ''}
+            </p>
+          </div>
           <button
             type="button"
-            className="btn btn-primary"
+            className="btn btn-primary btn-lg"
             onClick={() => setShowCreateForm(!showCreateForm)}
             disabled={isLoading}
           >
@@ -254,65 +265,93 @@ export default function FoldersList({ loaderData }: RouteComponentProps<Route.Co
           </button>
         </div>
 
-        <p className="text-muted mb-4">
-          Organize your short URLs into folders for easy management.
-        </p>
+        {/* Info Card */}
+        <div className="alert alert-light border d-flex align-items-center mb-4">
+          <FontAwesomeIcon icon={faFolderOpen} className="text-primary me-2" style={{ fontSize: '1.2rem' }} />
+          <span>
+            Organize your short URLs into folders for better management. Create folders by topic, campaign, or any category that works for you.
+          </span>
+        </div>
 
         {/* Create Folder Form */}
         {showCreateForm && (
-          <div className="card mb-4 p-3 bg-light">
-            <h5 className="mb-3">Create New Folder</h5>
-            <div className="row g-3 align-items-end">
-              <div className="col-md-4">
-                <label htmlFor="folderName" className="form-label">Name *</label>
-                <input
-                  type="text"
-                  id="folderName"
-                  className="form-control"
-                  value={newFolderName}
-                  onChange={(e) => setNewFolderName(e.target.value)}
-                  placeholder="My Folder"
-                />
-              </div>
-              <div className="col-md-5">
-                <label className="form-label">Color</label>
-                <div className="d-flex gap-2 flex-wrap">
-                  {FOLDER_COLORS.map((color) => (
-                    <button
-                      key={color}
-                      type="button"
-                      className="btn p-0"
-                      style={{
-                        width: 28,
-                        height: 28,
-                        backgroundColor: color,
-                        border: newFolderColor === color ? '3px solid #000' : '2px solid #ccc',
-                        borderRadius: 6,
-                        transition: 'transform 0.1s',
-                        transform: newFolderColor === color ? 'scale(1.1)' : 'scale(1)',
-                      }}
-                      onClick={() => setNewFolderColor(color)}
-                      title={color}
-                    />
-                  ))}
+          <div className="card mb-4 border-primary">
+            <div className="card-header bg-primary text-white d-flex align-items-center gap-2">
+              <FontAwesomeIcon icon={faFolder} />
+              <strong>Create New Folder</strong>
+            </div>
+            <div className="card-body">
+              <div className="row g-4">
+                <div className="col-md-6">
+                  <label htmlFor="folderName" className="form-label fw-bold">
+                    Folder Name <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="folderName"
+                    className="form-control form-control-lg"
+                    value={newFolderName}
+                    onChange={(e) => setNewFolderName(e.target.value)}
+                    placeholder="e.g., Marketing Campaigns"
+                  />
+                  <small className="text-muted">Give your folder a descriptive name</small>
                 </div>
-              </div>
-              <div className="col-md-3">
-                <button
-                  type="button"
-                  className="btn btn-success me-2"
-                  onClick={handleCreateFolder}
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Creating...' : 'Create'}
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setShowCreateForm(false)}
-                >
-                  Cancel
-                </button>
+                <div className="col-md-6">
+                  <label className="form-label fw-bold">Folder Color</label>
+                  <div className="d-flex gap-2 flex-wrap p-2 bg-light rounded">
+                    {FOLDER_COLORS.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        className="btn p-0 position-relative"
+                        style={{
+                          width: 36,
+                          height: 36,
+                          backgroundColor: color,
+                          border: newFolderColor === color ? '3px solid #000' : '2px solid #dee2e6',
+                          borderRadius: 8,
+                          transition: 'all 0.15s ease',
+                          transform: newFolderColor === color ? 'scale(1.15)' : 'scale(1)',
+                          boxShadow: newFolderColor === color ? '0 2px 8px rgba(0,0,0,0.3)' : 'none',
+                        }}
+                        onClick={() => setNewFolderColor(color)}
+                        title={`Select ${color}`}
+                      />
+                    ))}
+                  </div>
+                  <small className="text-muted">Choose a color to visually identify this folder</small>
+                </div>
+                <div className="col-12">
+                  {/* Preview */}
+                  <div className="p-3 rounded mb-3" style={{ backgroundColor: `${newFolderColor}15`, borderLeft: `4px solid ${newFolderColor}` }}>
+                    <div className="d-flex align-items-center gap-2">
+                      <span
+                        className="d-inline-block rounded"
+                        style={{ width: 24, height: 24, backgroundColor: newFolderColor }}
+                      />
+                      <strong>{newFolderName || 'Folder Preview'}</strong>
+                      <span className="badge bg-secondary ms-2">0 URLs</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="col-12 d-flex gap-2">
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-lg"
+                    onClick={handleCreateFolder}
+                    disabled={isLoading || !newFolderName.trim()}
+                  >
+                    <FontAwesomeIcon icon={faPlus} className="me-1" />
+                    {isLoading ? 'Creating...' : 'Create Folder'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary btn-lg"
+                    onClick={() => setShowCreateForm(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -321,27 +360,60 @@ export default function FoldersList({ loaderData }: RouteComponentProps<Route.Co
         {/* Search */}
         {folders.length > 0 && (
           <div className="mb-4">
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Search folders..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+            <div className="input-group">
+              <span className="input-group-text">
+                <FontAwesomeIcon icon={faSearch} />
+              </span>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Search folders by name or short code..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  onClick={() => setSearchTerm('')}
+                >
+                  Clear
+                </button>
+              )}
+            </div>
           </div>
         )}
 
         {folders.length === 0 ? (
           <div className="text-center py-5">
-            <FontAwesomeIcon icon={faFolder} className="text-muted mb-3" style={{ fontSize: '3rem' }} />
-            <p className="text-muted mb-2">No folders yet.</p>
-            <p className="text-muted small">
-              Create folders to organize your short URLs into categories.
+            <div className="mb-4">
+              <FontAwesomeIcon icon={faFolderOpen} className="text-primary" style={{ fontSize: '4rem' }} />
+            </div>
+            <h4 className="mb-3">No Folders Yet</h4>
+            <p className="text-muted mb-4" style={{ maxWidth: '400px', margin: '0 auto' }}>
+              Start organizing your short URLs by creating folders. Group them by campaign, topic, client, or any category that makes sense for you.
             </p>
+            <button
+              type="button"
+              className="btn btn-primary btn-lg"
+              onClick={() => setShowCreateForm(true)}
+              disabled={isLoading}
+            >
+              <FontAwesomeIcon icon={faPlus} className="me-1" />
+              Create Your First Folder
+            </button>
           </div>
         ) : filteredFolders.length === 0 ? (
-          <div className="text-center py-4">
-            <p className="text-muted">No folders match your search.</p>
+          <div className="text-center py-5">
+            <FontAwesomeIcon icon={faSearch} className="text-muted mb-3" style={{ fontSize: '2rem' }} />
+            <p className="text-muted mb-2">No folders match your search.</p>
+            <button
+              type="button"
+              className="btn btn-outline-secondary btn-sm"
+              onClick={() => setSearchTerm('')}
+            >
+              Clear search
+            </button>
           </div>
         ) : (
           <div className="d-flex flex-column gap-3">
@@ -385,21 +457,22 @@ export default function FoldersList({ loaderData }: RouteComponentProps<Route.Co
                           className="form-control form-control-sm"
                           value={editName}
                           onChange={(e) => setEditName(e.target.value)}
-                          style={{ width: 150 }}
+                          style={{ width: 180 }}
                           autoFocus
                         />
-                        <div className="d-flex gap-1">
+                        <div className="d-flex gap-1 p-1 bg-white rounded">
                           {FOLDER_COLORS.map((color) => (
                             <button
                               key={color}
                               type="button"
                               className="btn p-0"
                               style={{
-                                width: 18,
-                                height: 18,
+                                width: 22,
+                                height: 22,
                                 backgroundColor: color,
-                                border: editColor === color ? '2px solid #000' : '1px solid #ccc',
-                                borderRadius: 3,
+                                border: editColor === color ? '2px solid #000' : '1px solid #dee2e6',
+                                borderRadius: 4,
+                                transform: editColor === color ? 'scale(1.1)' : 'scale(1)',
                               }}
                               onClick={() => setEditColor(color)}
                             />
@@ -422,14 +495,17 @@ export default function FoldersList({ loaderData }: RouteComponentProps<Route.Co
                         </button>
                       </div>
                     ) : (
-                      <button
-                        type="button"
-                        className="btn btn-link p-0 text-dark text-start text-decoration-none fw-bold"
-                        onClick={() => startEditFolder(folder)}
-                        title="Click to edit"
-                      >
-                        {folder.name}
-                      </button>
+                      <div className="d-flex align-items-center gap-2">
+                        <span className="fw-bold">{folder.name}</span>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-link text-muted p-0"
+                          onClick={() => startEditFolder(folder)}
+                          title="Edit folder name and color"
+                        >
+                          <FontAwesomeIcon icon={faEdit} />
+                        </button>
+                      </div>
                     )}
                     <span className="badge bg-secondary ms-2">{folder.itemCount} URLs</span>
                   </div>
@@ -574,10 +650,16 @@ export default function FoldersList({ loaderData }: RouteComponentProps<Route.Co
           </div>
         )}
 
-        <div className="mt-4">
-          <Link to={`/server/${serverId}`} className="btn btn-secondary">
-            Back to Server
+        {/* Navigation */}
+        <div className="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
+          <Link to={`/server/${serverId}`} className="btn btn-outline-secondary">
+            &larr; Back to Server
           </Link>
+          {folders.length > 0 && (
+            <small className="text-muted">
+              {folders.length} folder{folders.length !== 1 ? 's' : ''} &bull; {totalItems} URL{totalItems !== 1 ? 's' : ''} organized
+            </small>
+          )}
         </div>
       </SimpleCard>
     </main>

@@ -147,6 +147,7 @@ export default function ApiKeysList({ loaderData }: RouteComponentProps<Route.Co
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showCreateShlinkForm, setShowCreateShlinkForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showQuickCreate, setShowQuickCreate] = useState(false);
 
   // Create registry key form state
   const [newKeyName, setNewKeyName] = useState('');
@@ -342,6 +343,65 @@ export default function ApiKeysList({ loaderData }: RouteComponentProps<Route.Co
           </h2>
         </div>
 
+        {/* Quick Actions Card - Primary Actions */}
+        <div className="card border-primary mb-4">
+          <div className="card-header bg-primary text-white d-flex align-items-center gap-2">
+            <FontAwesomeIcon icon={faPlus} />
+            <strong>Quick Actions</strong>
+          </div>
+          <div className="card-body">
+            <div className="row g-3">
+              <div className="col-md-6">
+                <div className="card h-100 border-success">
+                  <div className="card-body text-center">
+                    <FontAwesomeIcon icon={faServer} className="text-success mb-2" style={{ fontSize: '2rem' }} />
+                    <h5 className="card-title">Generate New API Key</h5>
+                    <p className="card-text text-muted small">
+                      Create a new API key directly on your Shlink server. The key will be generated and shown once.
+                    </p>
+                    <button
+                      type="button"
+                      className="btn btn-success"
+                      onClick={() => {
+                        setShowQuickCreate(true);
+                        setActiveTab('shlink');
+                        setShowCreateShlinkForm(true);
+                      }}
+                      disabled={isLoading}
+                    >
+                      <FontAwesomeIcon icon={faPlus} className="me-1" />
+                      Generate New Key
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="card h-100">
+                  <div className="card-body text-center">
+                    <FontAwesomeIcon icon={faKey} className="text-primary mb-2" style={{ fontSize: '2rem' }} />
+                    <h5 className="card-title">Register Existing Key</h5>
+                    <p className="card-text text-muted small">
+                      Already have an API key? Register it here to track usage, set expiration reminders, and add notes.
+                    </p>
+                    <button
+                      type="button"
+                      className="btn btn-outline-primary"
+                      onClick={() => {
+                        setActiveTab('registry');
+                        setShowCreateForm(true);
+                      }}
+                      disabled={isLoading}
+                    >
+                      <FontAwesomeIcon icon={faKey} className="me-1" />
+                      Register Key
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Expiring Keys Warning */}
         {expiringCount > 0 && (
           <div className="alert alert-warning d-flex align-items-center mb-4">
@@ -351,27 +411,47 @@ export default function ApiKeysList({ loaderData }: RouteComponentProps<Route.Co
           </div>
         )}
 
-        {/* Tabs */}
-        <ul className="nav nav-tabs mb-4">
-          <li className="nav-item">
-            <button
-              className={`nav-link ${activeTab === 'registry' ? 'active' : ''}`}
-              onClick={() => setActiveTab('registry')}
-            >
-              <FontAwesomeIcon icon={faKey} className="me-1" />
-              Key Registry ({apiKeys.length})
-            </button>
-          </li>
-          <li className="nav-item">
-            <button
-              className={`nav-link ${activeTab === 'shlink' ? 'active' : ''}`}
-              onClick={() => setActiveTab('shlink')}
-            >
-              <FontAwesomeIcon icon={faServer} className="me-1" />
-              Shlink API Keys ({shlinkApiKeys.length})
-            </button>
-          </li>
-        </ul>
+        {/* Tabs with descriptions */}
+        <div className="card mb-4">
+          <div className="card-header p-0">
+            <ul className="nav nav-tabs card-header-tabs">
+              <li className="nav-item">
+                <button
+                  className={`nav-link ${activeTab === 'registry' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('registry')}
+                  style={{ borderRadius: '0.375rem 0 0 0' }}
+                >
+                  <FontAwesomeIcon icon={faKey} className="me-1" />
+                  <strong>Key Registry</strong>
+                  <span className="badge bg-secondary ms-2">{apiKeys.length}</span>
+                </button>
+              </li>
+              <li className="nav-item">
+                <button
+                  className={`nav-link ${activeTab === 'shlink' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('shlink')}
+                >
+                  <FontAwesomeIcon icon={faServer} className="me-1" />
+                  <strong>Shlink Server Keys</strong>
+                  <span className="badge bg-secondary ms-2">{shlinkApiKeys.length}</span>
+                </button>
+              </li>
+            </ul>
+          </div>
+          <div className="card-body p-2 bg-light">
+            {activeTab === 'registry' ? (
+              <small className="text-muted">
+                <FontAwesomeIcon icon={faKey} className="me-1" />
+                Track and manage your registered API keys. Monitor usage, set expiration alerts, and keep notes.
+              </small>
+            ) : (
+              <small className="text-muted">
+                <FontAwesomeIcon icon={faServer} className="me-1" />
+                View and manage API keys directly on your Shlink server. Generate new keys or delete existing ones.
+              </small>
+            )}
+          </div>
+        </div>
 
         {/* Registry Tab */}
         {activeTab === 'registry' && (
@@ -393,96 +473,113 @@ export default function ApiKeysList({ loaderData }: RouteComponentProps<Route.Co
 
             {/* Create Form */}
             {showCreateForm && (
-              <div className="card mb-4 p-3 bg-light">
-                <h5 className="mb-3">Register API Key</h5>
-                <p className="text-muted small mb-3">
-                  Register an existing Shlink API key to track its usage and expiration.
-                </p>
-                <div className="row g-3">
-                  <div className="col-md-6">
-                    <label htmlFor="keyName" className="form-label">Name *</label>
-                    <input
-                      type="text"
-                      id="keyName"
-                      className="form-control"
-                      value={newKeyName}
-                      onChange={(e) => setNewKeyName(e.target.value)}
-                      placeholder="My API Key"
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label htmlFor="keyHint" className="form-label">Key Hint * (last 4 chars)</label>
-                    <input
-                      type="text"
-                      id="keyHint"
-                      className="form-control"
-                      value={newKeyHint}
-                      onChange={(e) => setNewKeyHint(e.target.value)}
-                      placeholder="abcd"
-                      maxLength={8}
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label htmlFor="keyService" className="form-label">Service</label>
-                    <select
-                      id="keyService"
-                      className="form-select"
-                      value={newKeyService}
-                      onChange={(e) => setNewKeyService(e.target.value)}
-                    >
-                      {SERVICE_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="col-md-6">
-                    <label htmlFor="keyExpires" className="form-label">Expires At (optional)</label>
-                    <input
-                      type="date"
-                      id="keyExpires"
-                      className="form-control"
-                      value={newKeyExpiresAt}
-                      onChange={(e) => setNewKeyExpiresAt(e.target.value)}
-                    />
-                  </div>
-                  <div className="col-12">
-                    <label htmlFor="keyDescription" className="form-label">Description (optional)</label>
-                    <input
-                      type="text"
-                      id="keyDescription"
-                      className="form-control"
-                      value={newKeyDescription}
-                      onChange={(e) => setNewKeyDescription(e.target.value)}
-                      placeholder="What is this key used for?"
-                    />
-                  </div>
-                  <div className="col-12">
-                    <label htmlFor="keyNotes" className="form-label">Notes (optional)</label>
-                    <textarea
-                      id="keyNotes"
-                      className="form-control"
-                      rows={2}
-                      value={newKeyNotes}
-                      onChange={(e) => setNewKeyNotes(e.target.value)}
-                      placeholder="Additional notes..."
-                    />
-                  </div>
-                  <div className="col-12">
-                    <button
-                      type="button"
-                      className="btn btn-success me-2"
-                      onClick={handleCreateKey}
-                      disabled={isLoading}
-                    >
-                      {isLoading ? 'Registering...' : 'Register Key'}
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      onClick={() => setShowCreateForm(false)}
-                    >
-                      Cancel
-                    </button>
+              <div className="card mb-4 border-primary">
+                <div className="card-header bg-primary text-white d-flex align-items-center gap-2">
+                  <FontAwesomeIcon icon={faKey} />
+                  <strong>Register Existing API Key</strong>
+                </div>
+                <div className="card-body">
+                  <p className="text-muted mb-3">
+                    Register an existing Shlink API key to track its usage, monitor expiration, and add notes for reference.
+                  </p>
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <label htmlFor="keyName" className="form-label fw-bold">
+                        Name <span className="text-danger">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        id="keyName"
+                        className="form-control"
+                        value={newKeyName}
+                        onChange={(e) => setNewKeyName(e.target.value)}
+                        placeholder="e.g., Production API Key"
+                      />
+                      <small className="text-muted">A friendly name to identify this key</small>
+                    </div>
+                    <div className="col-md-6">
+                      <label htmlFor="keyHint" className="form-label fw-bold">
+                        Key Hint <span className="text-danger">*</span>
+                      </label>
+                      <div className="input-group">
+                        <span className="input-group-text">...</span>
+                        <input
+                          type="text"
+                          id="keyHint"
+                          className="form-control"
+                          value={newKeyHint}
+                          onChange={(e) => setNewKeyHint(e.target.value)}
+                          placeholder="last 4-8 chars"
+                          maxLength={8}
+                        />
+                      </div>
+                      <small className="text-muted">Enter the last 4-8 characters of your API key for identification</small>
+                    </div>
+                    <div className="col-md-6">
+                      <label htmlFor="keyService" className="form-label fw-bold">Service / Integration</label>
+                      <select
+                        id="keyService"
+                        className="form-select"
+                        value={newKeyService}
+                        onChange={(e) => setNewKeyService(e.target.value)}
+                      >
+                        {SERVICE_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        ))}
+                      </select>
+                      <small className="text-muted">What service or integration uses this key?</small>
+                    </div>
+                    <div className="col-md-6">
+                      <label htmlFor="keyExpires" className="form-label fw-bold">Expiration Date</label>
+                      <input
+                        type="date"
+                        id="keyExpires"
+                        className="form-control"
+                        value={newKeyExpiresAt}
+                        onChange={(e) => setNewKeyExpiresAt(e.target.value)}
+                      />
+                      <small className="text-muted">Get reminded before this key expires</small>
+                    </div>
+                    <div className="col-12">
+                      <label htmlFor="keyDescription" className="form-label fw-bold">Description</label>
+                      <input
+                        type="text"
+                        id="keyDescription"
+                        className="form-control"
+                        value={newKeyDescription}
+                        onChange={(e) => setNewKeyDescription(e.target.value)}
+                        placeholder="What is this key used for?"
+                      />
+                    </div>
+                    <div className="col-12">
+                      <label htmlFor="keyNotes" className="form-label fw-bold">Notes</label>
+                      <textarea
+                        id="keyNotes"
+                        className="form-control"
+                        rows={2}
+                        value={newKeyNotes}
+                        onChange={(e) => setNewKeyNotes(e.target.value)}
+                        placeholder="Any additional notes about this key..."
+                      />
+                    </div>
+                    <div className="col-12 d-flex gap-2 pt-2">
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={handleCreateKey}
+                        disabled={isLoading}
+                      >
+                        <FontAwesomeIcon icon={faPlus} className="me-1" />
+                        {isLoading ? 'Registering...' : 'Register Key'}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary"
+                        onClick={() => setShowCreateForm(false)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -503,11 +600,22 @@ export default function ApiKeysList({ loaderData }: RouteComponentProps<Route.Co
 
             {apiKeys.length === 0 ? (
               <div className="text-center py-5">
-                <FontAwesomeIcon icon={faKey} className="text-muted mb-3" style={{ fontSize: '3rem' }} />
-                <p className="text-muted mb-2">No API keys registered.</p>
-                <p className="text-muted small">
-                  Register your Shlink API keys to track their usage and get expiration warnings.
+                <div className="mb-4">
+                  <FontAwesomeIcon icon={faKey} className="text-muted" style={{ fontSize: '4rem' }} />
+                </div>
+                <h4 className="text-muted mb-3">No API Keys Registered Yet</h4>
+                <p className="text-muted mb-4" style={{ maxWidth: '400px', margin: '0 auto' }}>
+                  Register your existing Shlink API keys to track their usage, monitor expiration dates, and keep notes.
                 </p>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-lg"
+                  onClick={() => setShowCreateForm(true)}
+                  disabled={isLoading}
+                >
+                  <FontAwesomeIcon icon={faPlus} className="me-1" />
+                  Register Your First Key
+                </button>
               </div>
             ) : filteredApiKeys.length === 0 ? (
               <div className="text-center py-4">
@@ -703,17 +811,20 @@ export default function ApiKeysList({ loaderData }: RouteComponentProps<Route.Co
         {activeTab === 'shlink' && (
           <>
             <div className="d-flex justify-content-between align-items-center mb-3">
-              <p className="text-muted mb-0">
-                API keys configured on the Shlink server. Create new keys or delete existing ones.
-              </p>
+              <div>
+                <p className="mb-1 fw-bold">Server API Keys</p>
+                <p className="text-muted mb-0 small">
+                  These keys exist on your Shlink server. Generate new keys or delete existing ones.
+                </p>
+              </div>
               <button
                 type="button"
-                className="btn btn-primary"
+                className="btn btn-success btn-lg"
                 onClick={() => setShowCreateShlinkForm(!showCreateShlinkForm)}
                 disabled={isLoading}
               >
                 <FontAwesomeIcon icon={faPlus} className="me-1" />
-                Generate New Key
+                Generate New API Key
               </button>
             </div>
 
@@ -726,88 +837,124 @@ export default function ApiKeysList({ loaderData }: RouteComponentProps<Route.Co
 
             {/* Created Key Display */}
             {createdKey && (
-              <div className="alert alert-success mb-4">
-                <h6 className="alert-heading">API Key Created!</h6>
-                <p className="mb-2">Copy this key now - it won't be shown again:</p>
-                <div className="d-flex gap-2 align-items-center">
-                  <code className="bg-dark text-light p-2 rounded flex-grow-1">{createdKey}</code>
+              <div className="card border-success mb-4">
+                <div className="card-header bg-success text-white d-flex align-items-center gap-2">
+                  <FontAwesomeIcon icon={faCheck} />
+                  <strong>API Key Generated Successfully!</strong>
+                </div>
+                <div className="card-body">
+                  <div className="alert alert-warning d-flex align-items-start mb-3">
+                    <FontAwesomeIcon icon={faExclamationTriangle} className="me-2 mt-1 text-warning" />
+                    <div>
+                      <strong>Copy this key now!</strong> It will not be displayed again for security reasons.
+                    </div>
+                  </div>
+                  <label className="form-label fw-bold">Your New API Key:</label>
+                  <div className="input-group input-group-lg mb-3">
+                    <input
+                      type="text"
+                      className="form-control bg-dark text-light font-monospace"
+                      value={createdKey}
+                      readOnly
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={() => copyToClipboard(createdKey)}
+                    >
+                      <FontAwesomeIcon icon={faClipboard} className="me-1" />
+                      Copy
+                    </button>
+                  </div>
                   <button
                     type="button"
-                    className="btn btn-sm btn-outline-light"
-                    onClick={() => copyToClipboard(createdKey)}
+                    className="btn btn-outline-secondary"
+                    onClick={() => setCreatedKey(null)}
                   >
-                    <FontAwesomeIcon icon={faClipboard} />
+                    <FontAwesomeIcon icon={faTimes} className="me-1" />
+                    Dismiss
                   </button>
                 </div>
-                <button
-                  type="button"
-                  className="btn btn-sm btn-outline-success mt-2"
-                  onClick={() => setCreatedKey(null)}
-                >
-                  Dismiss
-                </button>
               </div>
             )}
 
             {/* Create Shlink Key Form */}
             {showCreateShlinkForm && (
-              <div className="card mb-4 p-3 bg-light">
-                <h5 className="mb-3">Generate New Shlink API Key</h5>
-                <p className="text-muted small mb-3">
-                  Create a new API key directly on the Shlink server. The key will only be shown once!
-                </p>
-                <div className="row g-3">
-                  <div className="col-md-6">
-                    <label htmlFor="shlinkKeyName" className="form-label">Name (optional)</label>
-                    <input
-                      type="text"
-                      id="shlinkKeyName"
-                      className="form-control"
-                      value={shlinkKeyName}
-                      onChange={(e) => setShlinkKeyName(e.target.value)}
-                      placeholder="My new API key"
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label htmlFor="shlinkKeyExpires" className="form-label">Expires At (optional)</label>
-                    <input
-                      type="date"
-                      id="shlinkKeyExpires"
-                      className="form-control"
-                      value={shlinkKeyExpires}
-                      onChange={(e) => setShlinkKeyExpires(e.target.value)}
-                    />
-                  </div>
-                  <div className="col-12">
-                    <div className="form-check">
-                      <input
-                        type="checkbox"
-                        id="registerInDashboard"
-                        className="form-check-input"
-                        checked={registerInDashboard}
-                        onChange={(e) => setRegisterInDashboard(e.target.checked)}
-                      />
-                      <label htmlFor="registerInDashboard" className="form-check-label">
-                        Also register in dashboard key registry
-                      </label>
+              <div className="card mb-4 border-success">
+                <div className="card-header bg-success text-white d-flex align-items-center gap-2">
+                  <FontAwesomeIcon icon={faPlus} />
+                  <strong>Generate New Shlink API Key</strong>
+                </div>
+                <div className="card-body">
+                  <div className="alert alert-info d-flex align-items-start mb-3">
+                    <FontAwesomeIcon icon={faExclamationTriangle} className="me-2 mt-1" />
+                    <div>
+                      <strong>Important:</strong> The generated API key will only be displayed once! Make sure to copy it immediately after generation.
                     </div>
                   </div>
-                  <div className="col-12">
-                    <button
-                      type="button"
-                      className="btn btn-success me-2"
-                      onClick={handleCreateShlinkKey}
-                      disabled={isLoading}
-                    >
-                      {isLoading ? 'Generating...' : 'Generate Key'}
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      onClick={() => setShowCreateShlinkForm(false)}
-                    >
-                      Cancel
-                    </button>
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <label htmlFor="shlinkKeyName" className="form-label fw-bold">
+                        Key Name <span className="text-muted fw-normal">(optional)</span>
+                      </label>
+                      <input
+                        type="text"
+                        id="shlinkKeyName"
+                        className="form-control form-control-lg"
+                        value={shlinkKeyName}
+                        onChange={(e) => setShlinkKeyName(e.target.value)}
+                        placeholder="e.g., My Integration Key"
+                      />
+                      <small className="text-muted">Give your key a descriptive name to identify it later</small>
+                    </div>
+                    <div className="col-md-6">
+                      <label htmlFor="shlinkKeyExpires" className="form-label fw-bold">
+                        Expiration Date <span className="text-muted fw-normal">(optional)</span>
+                      </label>
+                      <input
+                        type="date"
+                        id="shlinkKeyExpires"
+                        className="form-control form-control-lg"
+                        value={shlinkKeyExpires}
+                        onChange={(e) => setShlinkKeyExpires(e.target.value)}
+                      />
+                      <small className="text-muted">Leave blank for a key that never expires</small>
+                    </div>
+                    <div className="col-12">
+                      <div className="form-check form-switch">
+                        <input
+                          type="checkbox"
+                          id="registerInDashboard"
+                          className="form-check-input"
+                          checked={registerInDashboard}
+                          onChange={(e) => setRegisterInDashboard(e.target.checked)}
+                          style={{ width: '3em', height: '1.5em' }}
+                        />
+                        <label htmlFor="registerInDashboard" className="form-check-label ms-2">
+                          <strong>Also register in Key Registry</strong>
+                          <br />
+                          <small className="text-muted">Track usage and get expiration reminders in the dashboard</small>
+                        </label>
+                      </div>
+                    </div>
+                    <div className="col-12 d-flex gap-2 pt-2">
+                      <button
+                        type="button"
+                        className="btn btn-success btn-lg"
+                        onClick={handleCreateShlinkKey}
+                        disabled={isLoading}
+                      >
+                        <FontAwesomeIcon icon={faPlus} className="me-1" />
+                        {isLoading ? 'Generating...' : 'Generate API Key'}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary btn-lg"
+                        onClick={() => setShowCreateShlinkForm(false)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -815,11 +962,22 @@ export default function ApiKeysList({ loaderData }: RouteComponentProps<Route.Co
 
             {!shlinkApiError && shlinkApiKeys.length === 0 ? (
               <div className="text-center py-5">
-                <FontAwesomeIcon icon={faServer} className="text-muted mb-3" style={{ fontSize: '3rem' }} />
-                <p className="text-muted mb-2">No API keys on the Shlink server.</p>
-                <p className="text-muted small">
-                  Generate a new API key to access the Shlink API.
+                <div className="mb-4">
+                  <FontAwesomeIcon icon={faServer} className="text-muted" style={{ fontSize: '4rem' }} />
+                </div>
+                <h4 className="text-muted mb-3">No API Keys Found</h4>
+                <p className="text-muted mb-4" style={{ maxWidth: '400px', margin: '0 auto' }}>
+                  Your Shlink server doesn't have any API keys yet. Generate a new key to start using the Shlink API.
                 </p>
+                <button
+                  type="button"
+                  className="btn btn-success btn-lg"
+                  onClick={() => setShowCreateShlinkForm(true)}
+                  disabled={isLoading}
+                >
+                  <FontAwesomeIcon icon={faPlus} className="me-1" />
+                  Generate Your First API Key
+                </button>
               </div>
             ) : !shlinkApiError && (
               <div className="table-responsive">
