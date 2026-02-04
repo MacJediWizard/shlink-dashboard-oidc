@@ -15,9 +15,10 @@ describe('<MainHeader />', () => {
     session: SessionData | null = null,
     branding: BrandingConfig = defaultBranding,
     allowLocalUserManagement = true,
+    initialPath = '/',
   ) => renderWithEvents(
     <SessionProvider value={session}>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[initialPath]}>
         <MainHeader branding={branding} allowLocalUserManagement={allowLocalUserManagement} />
       </MemoryRouter>
     </SessionProvider>,
@@ -101,5 +102,37 @@ describe('<MainHeader />', () => {
     expect(screen.queryByText('Manage users')).not.toBeInTheDocument();
     // But Audit log should still be visible for admins
     expect(screen.getByText('Audit log')).toBeInTheDocument();
+  });
+
+  it('does not show Server Tools menu when not on a server route', () => {
+    const sessionData = fromPartial<SessionData>({ role: 'admin', displayName: 'Admin' });
+    setUp(sessionData, defaultBranding, true, '/');
+
+    expect(screen.queryByTestId('server-features-menu')).not.toBeInTheDocument();
+  });
+
+  it('shows Server Tools menu when on a server route', async () => {
+    const sessionData = fromPartial<SessionData>({ role: 'admin', displayName: 'Admin' });
+    const { user } = setUp(sessionData, defaultBranding, true, '/server/abc123');
+
+    const serverToolsMenu = screen.getByTestId('server-features-menu');
+    expect(serverToolsMenu).toBeInTheDocument();
+    expect(serverToolsMenu).toHaveTextContent('Server Tools');
+
+    // Click on the Server Tools dropdown to see the menu items
+    await user.click(serverToolsMenu);
+
+    // Verify all menu items are present
+    expect(screen.getByText('Favorites')).toBeInTheDocument();
+    expect(screen.getByText('Folders')).toBeInTheDocument();
+    expect(screen.getByText('Expiring URLs')).toBeInTheDocument();
+    expect(screen.getByText('API Keys')).toBeInTheDocument();
+  });
+
+  it('shows Server Tools menu on deep server routes', () => {
+    const sessionData = fromPartial<SessionData>({ role: 'admin', displayName: 'Admin' });
+    setUp(sessionData, defaultBranding, true, '/server/abc123/favorites-list');
+
+    expect(screen.getByTestId('server-features-menu')).toBeInTheDocument();
   });
 });

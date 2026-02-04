@@ -115,6 +115,44 @@ describe('FoldersService', () => {
       expect(flush).toHaveBeenCalledOnce();
     });
 
+    it('updates only name when color is not provided', async () => {
+      const folder = fromPartial<Folder>({ id: '1', name: 'Old Name', color: '#000' });
+      findOne.mockResolvedValue(folder);
+
+      const result = await foldersService.updateFolder('1', 'user-1', 'server-1', {
+        name: 'New Name',
+      });
+
+      expect(result).toBe(folder);
+      expect(folder.name).toBe('New Name');
+      expect(folder.color).toBe('#000'); // Color unchanged
+    });
+
+    it('updates only color when name is not provided', async () => {
+      const folder = fromPartial<Folder>({ id: '1', name: 'Old Name', color: '#000' });
+      findOne.mockResolvedValue(folder);
+
+      const result = await foldersService.updateFolder('1', 'user-1', 'server-1', {
+        color: '#fff',
+      });
+
+      expect(result).toBe(folder);
+      expect(folder.name).toBe('Old Name'); // Name unchanged
+      expect(folder.color).toBe('#fff');
+    });
+
+    it('sets color to null when empty string provided', async () => {
+      const folder = fromPartial<Folder>({ id: '1', name: 'Old Name', color: '#000' });
+      findOne.mockResolvedValue(folder);
+
+      const result = await foldersService.updateFolder('1', 'user-1', 'server-1', {
+        color: '',
+      });
+
+      expect(result).toBe(folder);
+      expect(folder.color).toBeNull();
+    });
+
     it('returns null when folder not found', async () => {
       findOne.mockResolvedValue(null);
 

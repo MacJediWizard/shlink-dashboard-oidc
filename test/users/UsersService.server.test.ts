@@ -393,4 +393,167 @@ describe('UsersService', () => {
       expect(flush).not.toHaveBeenCalled();
     });
   });
+
+  describe('findByOidcSubject', () => {
+    it('returns user when found by OIDC subject', async () => {
+      const expectedUser = fromPartial<User>({ publicId: 'abc123', oidcSubject: 'oidc-sub-123' });
+      findOne.mockResolvedValue(expectedUser);
+
+      const result = await usersService.findByOidcSubject('oidc-sub-123');
+
+      expect(result).toEqual(expectedUser);
+      expect(findOne).toHaveBeenCalledWith({ oidcSubject: 'oidc-sub-123' });
+    });
+
+    it('returns null when user not found', async () => {
+      findOne.mockResolvedValue(null);
+
+      const result = await usersService.findByOidcSubject('oidc-sub-123');
+
+      expect(result).toBeNull();
+      expect(findOne).toHaveBeenCalledWith({ oidcSubject: 'oidc-sub-123' });
+    });
+  });
+
+  describe('findOrCreateFromOidcClaims', () => {
+    const createOidcUser = vi.fn();
+
+    beforeEach(() => {
+      usersRepo = fromPartial<UsersRepository>({
+        findOne,
+        findAndCountUsers,
+        createUser,
+        nativeDelete,
+        flush,
+        createOidcUser,
+      });
+      usersService = new UsersService(usersRepo);
+    });
+
+    it('returns existing user when found by OIDC subject', async () => {
+      const existingUser = fromPartial<User>({
+        publicId: 'abc123',
+        oidcSubject: 'oidc-sub-123',
+        role: 'managed-user', // Default role when OIDC config not set
+      });
+      findOne.mockResolvedValue(existingUser);
+
+      const claims = { sub: 'oidc-sub-123', groups: [] };
+      const result = await usersService.findOrCreateFromOidcClaims(claims);
+
+      expect(result).toEqual(existingUser);
+      expect(createOidcUser).not.toHaveBeenCalled();
+    });
+
+    it('updates role when existing user groups have changed', async () => {
+      const existingUser = fromPartial<User>({
+        publicId: 'abc123',
+        oidcSubject: 'oidc-sub-123',
+        role: 'admin', // User was admin before
+      });
+      findOne.mockResolvedValue(existingUser);
+
+      // Without OIDC config, any groups map to managed-user
+      const claims = { sub: 'oidc-sub-123', groups: ['users'] };
+      const result = await usersService.findOrCreateFromOidcClaims(claims);
+
+      expect(result.role).toEqual('managed-user');
+      expect(flush).toHaveBeenCalled();
+    });
+
+    it('creates new user when not found by OIDC subject', async () => {
+      findOne.mockResolvedValue(null);
+      const newUser = fromPartial<User>({
+        publicId: 'new-123',
+        username: 'testuser',
+        oidcSubject: 'oidc-sub-123',
+        role: 'managed-user',
+      });
+      createOidcUser.mockResolvedValue(newUser);
+
+      const claims = {
+        sub: 'oidc-sub-123',
+        preferred_username: 'testuser',
+        name: 'Test User',
+        groups: [],
+      };
+      const result = await usersService.findOrCreateFromOidcClaims(claims);
+
+      expect(result).toEqual(newUser);
+      expect(createOidcUser).toHaveBeenCalledWith(expect.objectContaining({
+        username: 'testuser',
+        displayName: 'Test User',
+        role: 'managed-user',
+        oidcSubject: 'oidc-sub-123',
+      }));
+    });
+
+    it('falls back to email when preferred_username is not provided', async () => {
+      findOne.mockResolvedValue(null);
+      const newUser = fromPartial<User>({ publicId: 'new-123' });
+      createOidcUser.mockResolvedValue(newUser);
+
+      const claims = {
+        sub: 'oidc-sub-123',
+        email: 'test@example.com',
+        groups: [],
+      };
+      await usersService.findOrCreateFromOidcClaims(claims);
+
+      expect(createOidcUser).toHaveBeenCalledWith(expect.objectContaining({
+        username: 'test@example.com',
+      }));
+    });
+
+    it('falls back to sub when neither preferred_username nor email is provided', async () => {
+      findOne.mockResolvedValue(null);
+      const newUser = fromPartial<User>({ publicId: 'new-123' });
+      createOidcUser.mockResolvedValue(newUser);
+
+      const claims = {
+        sub: 'oidc-sub-123',
+        groups: [],
+      };
+      await usersService.findOrCreateFromOidcClaims(claims);
+
+      expect(createOidcUser).toHaveBeenCalledWith(expect.objectContaining({
+        username: 'oidc-sub-123',
+      }));
+    });
+
+    it('handles username conflict by appending sub suffix', async () => {
+      findOne.mockResolvedValue(null);
+      const newUser = fromPartial<User>({ publicId: 'new-123' });
+      createOidcUser
+        .mockRejectedValueOnce(new UniqueConstraintViolationException(new Error('duplicate')))
+        .mockResolvedValue(newUser);
+
+      const claims = {
+        sub: 'oidc-sub-123',
+        preferred_username: 'existinguser',
+        groups: [],
+      };
+      const result = await usersService.findOrCreateFromOidcClaims(claims);
+
+      expect(result).toEqual(newUser);
+      expect(createOidcUser).toHaveBeenCalledTimes(2);
+      expect(createOidcUser).toHaveBeenLastCalledWith(expect.objectContaining({
+        username: 'existinguser_oidc-sub',
+      }));
+    });
+
+    it('re-throws non-unique-constraint errors', async () => {
+      findOne.mockResolvedValue(null);
+      const genericError = new Error('Database connection failed');
+      createOidcUser.mockRejectedValue(genericError);
+
+      const claims = {
+        sub: 'oidc-sub-123',
+        preferred_username: 'testuser',
+        groups: [],
+      };
+
+      await expect(usersService.findOrCreateFromOidcClaims(claims)).rejects.toThrow('Database connection failed');
+    });
+  });
 });

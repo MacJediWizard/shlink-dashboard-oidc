@@ -294,4 +294,156 @@ describe('FavoritesList', () => {
     expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Add notes...')).toBeInTheDocument();
   });
+
+  it('shows Add Favorite button', async () => {
+    setUp();
+    await waitFor(() => expect(screen.getByRole('button', { name: /Add Favorite/i })).toBeInTheDocument());
+  });
+
+  it('shows add favorite form when button clicked', async () => {
+    const { user } = setUp();
+
+    await waitFor(() => expect(screen.getByRole('button', { name: /Add Favorite/i })).toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: /Add Favorite/i }));
+
+    expect(screen.getByText('Add Favorite')).toBeInTheDocument();
+    expect(screen.getByLabelText('Short Code *')).toBeInTheDocument();
+    expect(screen.getByLabelText('Long URL *')).toBeInTheDocument();
+  });
+
+  it('can cancel add favorite form', async () => {
+    const { user } = setUp();
+
+    await waitFor(() => expect(screen.getByRole('button', { name: /Add Favorite/i })).toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: /Add Favorite/i }));
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(screen.queryByLabelText('Short Code *')).not.toBeInTheDocument();
+  });
+
+  it('can filter favorites with search', async () => {
+    const loaderData = {
+      ...defaultLoaderData,
+      favorites: [
+        {
+          shortUrlId: 'url-1',
+          shortCode: 'abc',
+          longUrl: 'https://example.com/page1',
+          title: 'Apple',
+          notes: null,
+          createdAt: '2026-01-01T00:00:00.000Z',
+        },
+        {
+          shortUrlId: 'url-2',
+          shortCode: 'xyz',
+          longUrl: 'https://example.com/page2',
+          title: 'Banana',
+          notes: null,
+          createdAt: '2026-01-02T00:00:00.000Z',
+        },
+      ],
+    };
+
+    const { user } = setUp(loaderData);
+
+    await waitFor(() => expect(screen.getByText('Apple')).toBeInTheDocument());
+    expect(screen.getByText('Banana')).toBeInTheDocument();
+
+    // Search for Apple
+    await user.type(screen.getByPlaceholderText('Search favorites...'), 'apple');
+
+    expect(screen.getByText('Apple')).toBeInTheDocument();
+    expect(screen.queryByText('Banana')).not.toBeInTheDocument();
+  });
+
+  it('shows no results message when search has no matches', async () => {
+    const loaderData = {
+      ...defaultLoaderData,
+      favorites: [
+        {
+          shortUrlId: 'url-1',
+          shortCode: 'abc',
+          longUrl: 'https://example.com/page1',
+          title: 'Apple',
+          notes: null,
+          createdAt: '2026-01-01T00:00:00.000Z',
+        },
+      ],
+    };
+
+    const { user } = setUp(loaderData);
+
+    await waitFor(() => expect(screen.getByText('Apple')).toBeInTheDocument());
+
+    await user.type(screen.getByPlaceholderText('Search favorites...'), 'xyz');
+
+    expect(screen.getByText('No favorites match your search.')).toBeInTheDocument();
+  });
+
+  it('can toggle URL expansion', async () => {
+    const longUrl = 'https://example.com/' + 'very-long-path/'.repeat(10);
+    const loaderData = {
+      ...defaultLoaderData,
+      favorites: [
+        {
+          shortUrlId: 'url-1',
+          shortCode: 'abc',
+          longUrl,
+          title: null,
+          notes: null,
+          createdAt: '2026-01-01T00:00:00.000Z',
+        },
+      ],
+    };
+
+    const { user } = setUp(loaderData);
+
+    await waitFor(() => expect(screen.getByText('abc')).toBeInTheDocument());
+
+    // Find and click "Show more" button
+    const showMoreButton = screen.getByRole('button', { name: 'Show more' });
+    await user.click(showMoreButton);
+
+    // Now it should say "Show less"
+    expect(screen.getByRole('button', { name: 'Show less' })).toBeInTheDocument();
+
+    // Click to collapse
+    await user.click(screen.getByRole('button', { name: 'Show less' }));
+    expect(screen.getByRole('button', { name: 'Show more' })).toBeInTheDocument();
+  });
+
+  it('can submit add favorite form', async () => {
+    const { user } = setUp();
+
+    await waitFor(() => expect(screen.getByRole('button', { name: /Add Favorite/i })).toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: /Add Favorite/i }));
+
+    // Fill out the form
+    await user.type(screen.getByLabelText('Short Code *'), 'testcode');
+    await user.type(screen.getByLabelText('Long URL *'), 'https://example.com/test');
+    await user.type(screen.getByLabelText('Title (optional)'), 'Test Title');
+    await user.type(screen.getByLabelText('Notes (optional)'), 'Test notes');
+
+    // Click the "Add to Favorites" form submit button
+    await user.click(screen.getByRole('button', { name: /Add to Favorites/i }));
+
+    // Form should close
+    await waitFor(() => expect(screen.queryByLabelText('Short Code *')).not.toBeInTheDocument());
+  });
+
+  it('shows alert when submitting add favorite without required fields', async () => {
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+
+    const { user } = setUp();
+
+    await waitFor(() => expect(screen.getByRole('button', { name: /Add Favorite/i })).toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: /Add Favorite/i }));
+
+    // Try to submit without filling required fields by clicking "Add to Favorites"
+    await user.click(screen.getByRole('button', { name: /Add to Favorites/i }));
+
+    expect(alertSpy).toHaveBeenCalledWith('Short code and long URL are required');
+
+    alertSpy.mockRestore();
+  });
 });

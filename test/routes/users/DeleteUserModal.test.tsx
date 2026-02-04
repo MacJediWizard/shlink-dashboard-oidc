@@ -56,4 +56,24 @@ describe('<DeleteUserModal />', () => {
     await user.click(screen.getByRole('button', { name: 'Delete user' }));
     expect(onClose).toHaveBeenCalled();
   });
+
+  it('handles confirm click when no user is provided', async () => {
+    const Stub = createRoutesStub([
+      {
+        path: '/',
+        Component: () => <DeleteUserModal open={true} onClose={onClose} userToDelete={undefined} />,
+      },
+      {
+        path: '/manage-users/delete',
+        action: () => ({}),
+      },
+    ]);
+
+    const { user } = renderWithEvents(<Stub />);
+
+    // Should not throw when clicking confirm without a user
+    await user.click(screen.getByRole('button', { name: 'Delete user' }));
+    // onClose should not be called because userToDelete is undefined
+    expect(onClose).not.toHaveBeenCalled();
+  });
 });
