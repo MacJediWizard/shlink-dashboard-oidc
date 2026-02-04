@@ -5,11 +5,11 @@ import type { LoaderFunctionArgs } from 'react-router';
 import { href } from 'react-router';
 import { AuditService } from '../../audit/AuditService.server';
 import { serverContainer } from '../../container/container.server';
-import { ensureAdminMiddleware } from '../../middleware/middleware.server';
+import { authMiddleware, ensureAdminMiddleware } from '../../middleware/middleware.server';
 import type { RouteComponentProps } from '../types';
 import type { Route } from './+types/audit-log';
 
-export const middleware = [ensureAdminMiddleware];
+export const middleware = [authMiddleware, ensureAdminMiddleware];
 
 export async function loader(
   { params }: LoaderFunctionArgs,
