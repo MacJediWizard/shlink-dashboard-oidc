@@ -1,5 +1,4 @@
 import type { Options } from '@mikro-orm/core';
-import { ApiKeyRegistry } from './app/entities/ApiKeyRegistry';
 import { AuditLog } from './app/entities/AuditLog';
 import { Favorite } from './app/entities/Favorite';
 import { Folder, FolderItem } from './app/entities/Folder';
@@ -15,7 +14,7 @@ const isProduction = isProd();
 async function resolveOptions(): Promise<Options> {
   return {
     ...baseConfig,
-    entities: [User, Settings, Server, Tag, AuditLog, Favorite, Folder, FolderItem, ApiKeyRegistry],
+    entities: [User, Settings, Server, Tag, AuditLog, Favorite, Folder, FolderItem],
     debug: !isProduction,
   } satisfies Options;
 }

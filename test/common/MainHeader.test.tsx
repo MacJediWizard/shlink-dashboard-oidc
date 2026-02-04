@@ -126,7 +126,6 @@ describe('<MainHeader />', () => {
     expect(screen.getByText('Favorites')).toBeInTheDocument();
     expect(screen.getByText('Folders')).toBeInTheDocument();
     expect(screen.getByText('Expiring URLs')).toBeInTheDocument();
-    expect(screen.getByText('API Keys')).toBeInTheDocument();
   });
 
   it('shows Server Tools menu on deep server routes', () => {

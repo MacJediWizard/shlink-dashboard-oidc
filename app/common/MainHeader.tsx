@@ -4,7 +4,6 @@ import {
   faCogs,
   faFolder,
   faHistory,
-  faKey,
   faServer,
   faStar,
   faUser,
@@ -71,12 +70,6 @@ const NavBarMenuItems: FC<NavBarMenuItemsProps> = ({ allowLocalUserManagement })
             selected={pathname.includes('/expiring')}
           >
             <FontAwesomeIcon icon={faClock} className="mr-0.5" /> Expiring URLs
-          </Dropdown.Item>
-          <Dropdown.Item
-            to={`/server/${serverId}/api-keys-list`}
-            selected={pathname.includes('/api-keys-list')}
-          >
-            <FontAwesomeIcon icon={faKey} className="mr-0.5" /> API Keys
           </Dropdown.Item>
         </NavBar.Dropdown>
       )}

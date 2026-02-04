@@ -20,9 +20,6 @@ export default [
     route('folders-list', './routes/server.$serverId.folders-list.tsx'),
     route('expiring', './routes/server.$serverId.expiring.tsx'),
     route('expiring-list', './routes/server.$serverId.expiring-list.tsx'),
-    route('api-keys', './routes/server.$serverId.api-keys.ts'),
-    route('api-keys-list', './routes/server.$serverId.api-keys-list.tsx'),
-    route('shlink-api-keys', './routes/server.$serverId.shlink-api-keys.ts'),
     route('*', './routes/shlink-component-wrapper.tsx'),
   ]),
 

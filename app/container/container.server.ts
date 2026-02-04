@@ -2,8 +2,6 @@ import { Migrator } from '@mikro-orm/migrations';
 import Bottle from 'bottlejs';
 import { Authenticator } from 'remix-auth';
 import { apiClientBuilder } from '../api/apiClientBuilder.server';
-import { ApiKeyRegistryService } from '../api-keys/ApiKeyRegistryService.server';
-import { ShlinkApiKeyService } from '../api-keys/ShlinkApiKeyService.server';
 import { AuditService } from '../audit/AuditService.server';
 import { createAuthenticator } from '../auth/auth.server';
 import { AuthHelper } from '../auth/auth-helper.server';
@@ -32,8 +30,6 @@ bottle.service(SettingsService.name, SettingsService, 'em');
 bottle.service(AuditService.name, AuditService, 'em');
 bottle.service(FavoritesService.name, FavoritesService, 'em');
 bottle.service(FoldersService.name, FoldersService, 'em');
-bottle.service(ApiKeyRegistryService.name, ApiKeyRegistryService, 'em');
-bottle.service(ShlinkApiKeyService.name, ShlinkApiKeyService);
 
 bottle.service(UsersService.name, UsersService, UsersRepository.name);
 bottle.serviceFactory(UsersRepository.name, createUsersRepository, 'em');
