@@ -1,7 +1,8 @@
-import { faCalendarTimes, faExclamationTriangle, faExternalLink, faFilter } from '@fortawesome/free-solid-svg-icons';
+import { faCalendarTimes, faExclamationTriangle, faExternalLink } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { SimpleCard, Table } from '@shlinkio/shlink-frontend-kit';
+import { Button, LabelledSelect, SimpleCard, Table } from '@shlinkio/shlink-frontend-kit';
 import type { ShlinkApiClient } from '@shlinkio/shlink-js-sdk/api-contract';
+import { clsx } from 'clsx';
 import { useState } from 'react';
 import type { LoaderFunctionArgs } from 'react-router';
 import { Link } from 'react-router';
@@ -38,13 +39,10 @@ export async function loader(
   const server = await serversService.getByPublicIdAndUser(serverId, session.publicId);
   const apiClient: ShlinkApiClient = apiClientBuilder(server);
 
-  // Get short URLs with validUntil set, ordered by validUntil ascending
   const now = new Date();
   const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
   try {
-    // Fetch all URLs and filter client-side for those expiring soon
-    // Note: Shlink API may not support filtering by validUntil directly
     const result = await apiClient.listShortUrls({
       itemsPerPage: 100,
       orderBy: { field: 'dateCreated', dir: 'DESC' },
@@ -72,7 +70,6 @@ export async function loader(
       }
     }
 
-    // Sort by days until expiration (soonest first)
     expiringUrls.sort((a, b) => a.daysUntilExpiration - b.daysUntilExpiration);
 
     return {
@@ -98,14 +95,20 @@ function formatDate(isoDate: string): string {
   });
 }
 
-function getExpirationBadgeClass(days: number): string {
-  if (days <= 3) {
-    return 'bg-danger text-white';
-  }
-  if (days <= 7) {
-    return 'bg-warning text-dark';
-  }
-  return 'bg-info text-white';
+// Badge for days until expiration
+function ExpirationBadge({ days }: { days: number }) {
+  return (
+    <span
+      className={clsx(
+        'rounded-sm px-2 py-0.5 text-xs font-bold',
+        days <= 3 && 'bg-danger text-white',
+        days > 3 && days <= 7 && 'bg-warning text-dark',
+        days > 7 && 'bg-info text-white',
+      )}
+    >
+      {days} {days === 1 ? 'day' : 'days'}
+    </span>
+  );
 }
 
 export default function ExpiringUrls({ loaderData }: RouteComponentProps<Route.ComponentProps>) {
@@ -126,158 +129,146 @@ export default function ExpiringUrls({ loaderData }: RouteComponentProps<Route.C
   const urgentCount = expiringUrls.filter((u) => u.daysUntilExpiration <= 7).length;
 
   return (
-    <main className="container py-4 mx-auto">
-      <SimpleCard>
-        {/* Header with Stats */}
-        <div className="d-flex justify-content-between align-items-start mb-4">
+    <main className="container py-4 mx-auto flex flex-col gap-4">
+      {/* Page Header */}
+      <div className="flex justify-between items-start">
+        <div>
+          <h2 className="flex items-center gap-2 text-xl font-bold">
+            <FontAwesomeIcon icon={faCalendarTimes} className="text-red-600" />
+            Expiring URLs
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400">
+            <strong>{serverName}</strong> &bull; {expiringUrls.length} URL{expiringUrls.length !== 1 ? 's' : ''} expiring within 30 days
+          </p>
+        </div>
+      </div>
+
+      {/* Urgent Warning */}
+      {urgentCount > 0 && !error && (
+        <div className="flex items-center gap-3 p-4 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 border border-red-300 dark:border-red-700">
+          <FontAwesomeIcon icon={faExclamationTriangle} className="text-xl" />
           <div>
-            <h2 className="d-flex align-items-center gap-2 mb-2">
-              <FontAwesomeIcon icon={faCalendarTimes} className="text-danger" />
-              Expiring URLs
-            </h2>
-            <p className="text-muted mb-0">
-              <strong>{serverName}</strong> &bull; {expiringUrls.length} URL{expiringUrls.length !== 1 ? 's' : ''} expiring within 30 days
-            </p>
+            <strong>{urgentCount} URL{urgentCount !== 1 ? 's' : ''} expiring within 7 days!</strong>
+            <span className="ml-2 text-red-600 dark:text-red-400">Review and take action before they expire.</span>
           </div>
         </div>
+      )}
 
-        {/* Urgent Warning */}
-        {urgentCount > 0 && !error && (
-          <div className="alert alert-danger d-flex align-items-center mb-4">
-            <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" style={{ fontSize: '1.2rem' }} />
-            <div>
-              <strong>{urgentCount} URL{urgentCount !== 1 ? 's' : ''} expiring within 7 days!</strong>
-              <span className="ms-2 text-muted">Review and take action before they expire.</span>
-            </div>
+      {/* Info Card */}
+      <div className="flex items-center gap-3 p-4 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+        <FontAwesomeIcon icon={faCalendarTimes} className="text-red-600 text-xl" />
+        <span className="text-gray-600 dark:text-gray-400">
+          URLs with expiration dates set will stop redirecting after their expiration.
+        </span>
+      </div>
+
+      {/* Error */}
+      {error && (
+        <div className="flex items-center gap-3 p-4 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 border border-red-300 dark:border-red-700">
+          <FontAwesomeIcon icon={faExclamationTriangle} />
+          <div>
+            <strong>Error fetching URLs:</strong> {error}
           </div>
-        )}
-
-        {/* Info Card */}
-        <div className="alert alert-light border d-flex align-items-center mb-4">
-          <FontAwesomeIcon icon={faCalendarTimes} className="text-danger me-2" style={{ fontSize: '1.2rem' }} />
-          <span>
-            URLs with expiration dates set will stop redirecting after their expiration. Review and update them as needed.
-          </span>
         </div>
+      )}
 
-        {error && (
-          <div className="alert alert-danger d-flex align-items-center mb-4">
-            <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
-            <div>
-              <strong>Error fetching URLs:</strong> {error}
-            </div>
-          </div>
-        )}
+      {/* Filter */}
+      {expiringUrls.length > 0 && !error && (
+        <div className="max-w-xs">
+          <LabelledSelect
+            label="Filter by time"
+            value={filterDays}
+            onChange={(e) => setFilterDays(e.target.value as 'all' | '7' | '14' | '30')}
+          >
+            <option value="all">Show all ({expiringUrls.length})</option>
+            <option value="7">Within 7 days ({expiringUrls.filter((u) => u.daysUntilExpiration <= 7).length})</option>
+            <option value="14">Within 14 days ({expiringUrls.filter((u) => u.daysUntilExpiration <= 14).length})</option>
+            <option value="30">Within 30 days ({expiringUrls.length})</option>
+          </LabelledSelect>
+        </div>
+      )}
 
-        {/* Filter */}
+      {/* Content */}
+      {!error && expiringUrls.length === 0 ? (
+        <SimpleCard bodyClassName="text-center py-8">
+          <FontAwesomeIcon icon={faCalendarTimes} className="text-green-600 text-5xl mb-4" />
+          <h4 className="text-green-600 mb-2">All Clear!</h4>
+          <p className="text-gray-500 text-sm max-w-md mx-auto">
+            No short URLs are expiring within the next 30 days.
+          </p>
+        </SimpleCard>
+      ) : !error && filteredUrls.length === 0 ? (
+        <SimpleCard bodyClassName="text-center py-4">
+          <p className="text-gray-500 mb-2">No URLs match the selected filter.</p>
+          <Button variant="secondary" onClick={() => setFilterDays('all')}>
+            Show all
+          </Button>
+        </SimpleCard>
+      ) : !error && (
+        <SimpleCard
+          title={`${filteredUrls.length} expiring URL${filteredUrls.length !== 1 ? 's' : ''}`}
+          bodyClassName="flex flex-col gap-4"
+        >
+          <Table
+            header={
+              <Table.Row>
+                <Table.Cell>Short Code</Table.Cell>
+                <Table.Cell>Title / Destination</Table.Cell>
+                <Table.Cell>Expires</Table.Cell>
+                <Table.Cell>Time Left</Table.Cell>
+                <Table.Cell>Actions</Table.Cell>
+              </Table.Row>
+            }
+          >
+            {filteredUrls.map((url) => (
+              <Table.Row
+                key={url.shortCode}
+                className={clsx(
+                  url.daysUntilExpiration <= 3 && 'bg-red-50 dark:bg-red-900/20',
+                  url.daysUntilExpiration > 3 && url.daysUntilExpiration <= 7 && 'bg-yellow-50 dark:bg-yellow-900/20',
+                )}
+              >
+                <Table.Cell>
+                  <code className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded text-sm">{url.shortCode}</code>
+                </Table.Cell>
+                <Table.Cell className="max-w-xs">
+                  {url.title && <div className="font-medium truncate">{url.title}</div>}
+                  <div className="text-gray-500 text-sm truncate">{url.longUrl}</div>
+                </Table.Cell>
+                <Table.Cell className="whitespace-nowrap">{formatDate(url.validUntil)}</Table.Cell>
+                <Table.Cell>
+                  <ExpirationBadge days={url.daysUntilExpiration} />
+                </Table.Cell>
+                <Table.Cell>
+                  <a
+                    href={url.shortUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center px-3 py-1.5 rounded border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors"
+                    title="Open short URL"
+                  >
+                    <FontAwesomeIcon icon={faExternalLink} />
+                  </a>
+                </Table.Cell>
+              </Table.Row>
+            ))}
+          </Table>
+        </SimpleCard>
+      )}
+
+      {/* Summary & Back Link */}
+      <div className="flex justify-between items-center">
+        <Link to={`/server/${serverId}`} className="text-blue-600 hover:underline">
+          &larr; Back to Server
+        </Link>
         {expiringUrls.length > 0 && !error && (
-          <div className="mb-4">
-            <div className="input-group" style={{ maxWidth: '300px' }}>
-              <span className="input-group-text">
-                <FontAwesomeIcon icon={faFilter} />
-              </span>
-              <select
-                className="form-select"
-                value={filterDays}
-                onChange={(e) => setFilterDays(e.target.value as 'all' | '7' | '14' | '30')}
-              >
-                <option value="all">Show all ({expiringUrls.length})</option>
-                <option value="7">Within 7 days ({expiringUrls.filter((u) => u.daysUntilExpiration <= 7).length})</option>
-                <option value="14">Within 14 days ({expiringUrls.filter((u) => u.daysUntilExpiration <= 14).length})</option>
-                <option value="30">Within 30 days ({expiringUrls.length})</option>
-              </select>
-            </div>
-          </div>
+          <span className="text-gray-500 text-sm">
+            {urgentCount > 0 && <span className="text-red-600 font-bold">{urgentCount} urgent</span>}
+            {urgentCount > 0 && ' &bull; '}
+            {expiringUrls.length} total expiring
+          </span>
         )}
-
-        {!error && expiringUrls.length === 0 ? (
-          <div className="text-center py-5">
-            <div className="mb-4">
-              <FontAwesomeIcon icon={faCalendarTimes} className="text-success" style={{ fontSize: '4rem' }} />
-            </div>
-            <h4 className="text-success mb-3">All Clear!</h4>
-            <p className="text-muted mb-0" style={{ maxWidth: '400px', margin: '0 auto' }}>
-              No short URLs are expiring within the next 30 days. Check back later or set expiration dates on your URLs to track them here.
-            </p>
-          </div>
-        ) : !error && filteredUrls.length === 0 ? (
-          <div className="text-center py-4">
-            <p className="text-muted mb-2">No URLs match the selected filter.</p>
-            <button
-              type="button"
-              className="btn btn-outline-secondary btn-sm"
-              onClick={() => setFilterDays('all')}
-            >
-              Show all
-            </button>
-          </div>
-        ) : !error && (
-          <>
-            {/* Results count */}
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <small className="text-muted">
-                Showing {filteredUrls.length} of {expiringUrls.length} expiring URLs
-              </small>
-            </div>
-            <div className="table-responsive">
-              <Table
-                header={
-                  <Table.Row>
-                    <Table.Cell>Short Code</Table.Cell>
-                    <Table.Cell>Title / Destination</Table.Cell>
-                    <Table.Cell>Expires</Table.Cell>
-                    <Table.Cell>Time Left</Table.Cell>
-                    <Table.Cell>Actions</Table.Cell>
-                  </Table.Row>
-                }
-              >
-                {filteredUrls.map((url) => (
-                  <Table.Row key={url.shortCode} className={url.daysUntilExpiration <= 3 ? 'table-danger' : url.daysUntilExpiration <= 7 ? 'table-warning' : ''}>
-                    <Table.Cell>
-                      <code className="bg-light px-2 py-1 rounded">{url.shortCode}</code>
-                    </Table.Cell>
-                    <Table.Cell style={{ maxWidth: '300px' }}>
-                      {url.title && <div className="fw-medium text-truncate">{url.title}</div>}
-                      <div className="text-muted small text-truncate">{url.longUrl}</div>
-                    </Table.Cell>
-                    <Table.Cell className="text-nowrap">{formatDate(url.validUntil)}</Table.Cell>
-                    <Table.Cell>
-                      <span className={`badge ${getExpirationBadgeClass(url.daysUntilExpiration)}`}>
-                        {url.daysUntilExpiration} {url.daysUntilExpiration === 1 ? 'day' : 'days'}
-                      </span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <a
-                        href={url.shortUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn btn-sm btn-outline-primary"
-                        title="Open short URL"
-                      >
-                        <FontAwesomeIcon icon={faExternalLink} />
-                      </a>
-                    </Table.Cell>
-                  </Table.Row>
-                ))}
-              </Table>
-            </div>
-          </>
-        )}
-
-        {/* Navigation */}
-        <div className="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
-          <Link to={`/server/${serverId}`} className="btn btn-outline-secondary">
-            &larr; Back to Server
-          </Link>
-          {expiringUrls.length > 0 && !error && (
-            <small className="text-muted">
-              {urgentCount > 0 && <span className="text-danger">{urgentCount} urgent</span>}
-              {urgentCount > 0 && ' &bull; '}
-              {expiringUrls.length} total expiring
-            </small>
-          )}
-        </div>
-      </SimpleCard>
+      </div>
     </main>
   );
 }

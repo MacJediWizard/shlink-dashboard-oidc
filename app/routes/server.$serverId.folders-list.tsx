@@ -5,11 +5,10 @@ import {
   faFolder,
   faFolderOpen,
   faPlus,
-  faSearch,
   faTrash,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { SimpleCard, Table } from '@shlinkio/shlink-frontend-kit';
+import { Button, LabelledInput, SimpleCard, Table } from '@shlinkio/shlink-frontend-kit';
 import { useState } from 'react';
 import type { LoaderFunctionArgs } from 'react-router';
 import { Link, useFetcher, useRevalidator } from 'react-router';
@@ -110,7 +109,6 @@ export default function FoldersList({ loaderData }: RouteComponentProps<Route.Co
   const [editName, setEditName] = useState('');
   const [editColor, setEditColor] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  // Add URL to folder state
   const [addingToFolder, setAddingToFolder] = useState<number | null>(null);
   const [newItemShortCode, setNewItemShortCode] = useState('');
 
@@ -207,7 +205,6 @@ export default function FoldersList({ loaderData }: RouteComponentProps<Route.Co
       return;
     }
 
-    // Generate a unique ID for the item
     const shortUrlId = `folder-item-${newItemShortCode.trim()}-${Date.now()}`;
 
     fetcher.submit(
@@ -241,427 +238,345 @@ export default function FoldersList({ loaderData }: RouteComponentProps<Route.Co
   const totalItems = folders.reduce((sum, f) => sum + f.itemCount, 0);
 
   return (
-    <main className="container py-4 mx-auto">
-      <SimpleCard>
-        {/* Header with Stats */}
-        <div className="d-flex justify-content-between align-items-start mb-4">
-          <div>
-            <h2 className="d-flex align-items-center gap-2 mb-2">
-              <FontAwesomeIcon icon={faFolder} className="text-primary" />
-              Folders
-            </h2>
-            <p className="text-muted mb-0">
-              <strong>{serverName}</strong> &bull; {folders.length} folder{folders.length !== 1 ? 's' : ''} &bull; {totalItems} total URL{totalItems !== 1 ? 's' : ''}
-            </p>
-          </div>
-          <button
-            type="button"
-            className="btn btn-primary btn-lg"
-            onClick={() => setShowCreateForm(!showCreateForm)}
-            disabled={isLoading}
-          >
-            <FontAwesomeIcon icon={faPlus} className="me-1" />
-            New Folder
-          </button>
+    <main className="container py-4 mx-auto flex flex-col gap-4">
+      {/* Page Header */}
+      <div className="flex justify-between items-start">
+        <div>
+          <h2 className="flex items-center gap-2 text-xl font-bold">
+            <FontAwesomeIcon icon={faFolder} className="text-blue-600" />
+            Folders
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400">
+            <strong>{serverName}</strong> &bull; {folders.length} folder{folders.length !== 1 ? 's' : ''} &bull; {totalItems} total URL{totalItems !== 1 ? 's' : ''}
+          </p>
         </div>
+        <Button onClick={() => setShowCreateForm(!showCreateForm)} disabled={isLoading}>
+          <FontAwesomeIcon icon={faPlus} className="mr-1" />
+          New Folder
+        </Button>
+      </div>
 
-        {/* Info Card */}
-        <div className="alert alert-light border d-flex align-items-center mb-4">
-          <FontAwesomeIcon icon={faFolderOpen} className="text-primary me-2" style={{ fontSize: '1.2rem' }} />
-          <span>
-            Organize your short URLs into folders for better management. Create folders by topic, campaign, or any category that works for you.
-          </span>
-        </div>
+      {/* Info Card */}
+      <div className="flex items-center gap-3 p-4 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+        <FontAwesomeIcon icon={faFolderOpen} className="text-blue-600 text-xl" />
+        <span className="text-gray-600 dark:text-gray-400">
+          Organize your short URLs into folders for better management.
+        </span>
+      </div>
 
-        {/* Create Folder Form */}
-        {showCreateForm && (
-          <div className="card mb-4 border-primary">
-            <div className="card-header bg-primary text-white d-flex align-items-center gap-2">
-              <FontAwesomeIcon icon={faFolder} />
-              <strong>Create New Folder</strong>
-            </div>
-            <div className="card-body">
-              <div className="row g-4">
-                <div className="col-md-6">
-                  <label htmlFor="folderName" className="form-label fw-bold">
-                    Folder Name <span className="text-danger">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    id="folderName"
-                    className="form-control form-control-lg"
-                    value={newFolderName}
-                    onChange={(e) => setNewFolderName(e.target.value)}
-                    placeholder="e.g., Marketing Campaigns"
+      {/* Create Folder Form */}
+      {showCreateForm && (
+        <SimpleCard title="Create New Folder" bodyClassName="flex flex-col gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <LabelledInput
+              label="Folder Name"
+              required
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              placeholder="e.g., Marketing Campaigns"
+            />
+            <div>
+              <label className="block text-sm font-medium mb-2">Folder Color</label>
+              <div className="flex gap-2 flex-wrap p-2 bg-gray-100 dark:bg-gray-800 rounded">
+                {FOLDER_COLORS.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    className="p-0 border-0 cursor-pointer"
+                    style={{
+                      width: 32,
+                      height: 32,
+                      backgroundColor: color,
+                      border: newFolderColor === color ? '3px solid #000' : '2px solid transparent',
+                      borderRadius: 6,
+                      transform: newFolderColor === color ? 'scale(1.15)' : 'scale(1)',
+                      boxShadow: newFolderColor === color ? '0 2px 8px rgba(0,0,0,0.3)' : 'none',
+                      transition: 'all 0.15s ease',
+                    }}
+                    onClick={() => setNewFolderColor(color)}
+                    title={`Select ${color}`}
                   />
-                  <small className="text-muted">Give your folder a descriptive name</small>
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label fw-bold">Folder Color</label>
-                  <div className="d-flex gap-2 flex-wrap p-2 bg-light rounded">
-                    {FOLDER_COLORS.map((color) => (
-                      <button
-                        key={color}
-                        type="button"
-                        className="btn p-0 position-relative"
-                        style={{
-                          width: 36,
-                          height: 36,
-                          backgroundColor: color,
-                          border: newFolderColor === color ? '3px solid #000' : '2px solid #dee2e6',
-                          borderRadius: 8,
-                          transition: 'all 0.15s ease',
-                          transform: newFolderColor === color ? 'scale(1.15)' : 'scale(1)',
-                          boxShadow: newFolderColor === color ? '0 2px 8px rgba(0,0,0,0.3)' : 'none',
-                        }}
-                        onClick={() => setNewFolderColor(color)}
-                        title={`Select ${color}`}
-                      />
-                    ))}
-                  </div>
-                  <small className="text-muted">Choose a color to visually identify this folder</small>
-                </div>
-                <div className="col-12">
-                  {/* Preview */}
-                  <div className="p-3 rounded mb-3" style={{ backgroundColor: `${newFolderColor}15`, borderLeft: `4px solid ${newFolderColor}` }}>
-                    <div className="d-flex align-items-center gap-2">
-                      <span
-                        className="d-inline-block rounded"
-                        style={{ width: 24, height: 24, backgroundColor: newFolderColor }}
-                      />
-                      <strong>{newFolderName || 'Folder Preview'}</strong>
-                      <span className="badge bg-secondary ms-2">0 URLs</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="col-12 d-flex gap-2">
-                  <button
-                    type="button"
-                    className="btn btn-primary btn-lg"
-                    onClick={handleCreateFolder}
-                    disabled={isLoading || !newFolderName.trim()}
-                  >
-                    <FontAwesomeIcon icon={faPlus} className="me-1" />
-                    {isLoading ? 'Creating...' : 'Create Folder'}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary btn-lg"
-                    onClick={() => setShowCreateForm(false)}
-                  >
-                    Cancel
-                  </button>
-                </div>
+                ))}
               </div>
             </div>
           </div>
-        )}
-
-        {/* Search */}
-        {folders.length > 0 && (
-          <div className="mb-4">
-            <div className="input-group">
-              <span className="input-group-text">
-                <FontAwesomeIcon icon={faSearch} />
-              </span>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Search folders by name or short code..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+          {/* Preview */}
+          <div className="p-3 rounded" style={{ backgroundColor: `${newFolderColor}20`, borderLeft: `4px solid ${newFolderColor}` }}>
+            <div className="flex items-center gap-2">
+              <span
+                className="inline-block rounded"
+                style={{ width: 20, height: 20, backgroundColor: newFolderColor }}
               />
-              {searchTerm && (
-                <button
-                  type="button"
-                  className="btn btn-outline-secondary"
-                  onClick={() => setSearchTerm('')}
-                >
-                  Clear
-                </button>
+              <strong>{newFolderName || 'Folder Preview'}</strong>
+              <span className="rounded-sm px-2 py-0.5 text-xs font-bold bg-gray-500 text-white">0 URLs</span>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={handleCreateFolder} disabled={isLoading || !newFolderName.trim()}>
+              <FontAwesomeIcon icon={faPlus} className="mr-1" />
+              {isLoading ? 'Creating...' : 'Create Folder'}
+            </Button>
+            <Button variant="secondary" onClick={() => setShowCreateForm(false)}>
+              Cancel
+            </Button>
+          </div>
+        </SimpleCard>
+      )}
+
+      {/* Search */}
+      {folders.length > 0 && (
+        <div className="relative">
+          <input
+            type="text"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+            placeholder="Search folders by name or short code..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      )}
+
+      {/* Content */}
+      {folders.length === 0 ? (
+        <SimpleCard bodyClassName="text-center py-8">
+          <FontAwesomeIcon icon={faFolderOpen} className="text-blue-600 text-5xl mb-4" />
+          <h4 className="text-gray-600 dark:text-gray-400 mb-2">No Folders Yet</h4>
+          <p className="text-gray-500 text-sm mb-4 max-w-md mx-auto">
+            Start organizing your short URLs by creating folders.
+          </p>
+          <Button onClick={() => setShowCreateForm(true)} disabled={isLoading}>
+            <FontAwesomeIcon icon={faPlus} className="mr-1" />
+            Create Your First Folder
+          </Button>
+        </SimpleCard>
+      ) : filteredFolders.length === 0 ? (
+        <SimpleCard bodyClassName="text-center py-4">
+          <p className="text-gray-500">No folders match your search.</p>
+        </SimpleCard>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {filteredFolders.map((folder) => (
+            <div
+              key={folder.id}
+              className="border rounded-lg overflow-hidden"
+              style={{ borderColor: folder.color || '#e5e7eb' }}
+            >
+              {/* Folder Header */}
+              <div
+                className="p-3 flex items-center justify-between"
+                style={{
+                  backgroundColor: folder.color ? `${folder.color}15` : '#f9fafb',
+                  borderLeft: `4px solid ${folder.color || '#6b7280'}`,
+                }}
+              >
+                <div className="flex items-center gap-2 flex-grow">
+                  <button
+                    type="button"
+                    className="text-gray-500 hover:text-gray-700"
+                    onClick={() => toggleFolder(folder.id)}
+                  >
+                    <FontAwesomeIcon
+                      icon={expandedFolders.has(folder.id) ? faChevronDown : faChevronRight}
+                    />
+                  </button>
+                  <span
+                    className="inline-block rounded"
+                    style={{
+                      width: 16,
+                      height: 16,
+                      backgroundColor: folder.color || '#6b7280',
+                      flexShrink: 0,
+                    }}
+                  />
+                  {editingFolder === folder.id ? (
+                    <div className="flex gap-2 items-center flex-wrap">
+                      <input
+                        type="text"
+                        className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-sm"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        style={{ width: 160 }}
+                        autoFocus
+                      />
+                      <div className="flex gap-1 p-1 bg-white dark:bg-gray-800 rounded">
+                        {FOLDER_COLORS.map((color) => (
+                          <button
+                            key={color}
+                            type="button"
+                            className="p-0 border-0 cursor-pointer"
+                            style={{
+                              width: 20,
+                              height: 20,
+                              backgroundColor: color,
+                              border: editColor === color ? '2px solid #000' : '1px solid #e5e7eb',
+                              borderRadius: 4,
+                              transform: editColor === color ? 'scale(1.1)' : 'scale(1)',
+                            }}
+                            onClick={() => setEditColor(color)}
+                          />
+                        ))}
+                      </div>
+                      <Button onClick={() => handleUpdateFolder(folder.id)} disabled={isLoading}>
+                        Save
+                      </Button>
+                      <Button variant="secondary" onClick={() => setEditingFolder(null)}>
+                        Cancel
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold">{folder.name}</span>
+                      <button
+                        type="button"
+                        className="text-gray-400 hover:text-gray-600"
+                        onClick={() => startEditFolder(folder)}
+                        title="Edit folder name and color"
+                      >
+                        <FontAwesomeIcon icon={faEdit} />
+                      </button>
+                    </div>
+                  )}
+                  <span className="rounded-sm px-2 py-0.5 text-xs font-bold bg-gray-500 text-white ml-2">
+                    {folder.itemCount} URLs
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      setAddingToFolder(addingToFolder === folder.id ? null : folder.id);
+                      setNewItemShortCode('');
+                      if (!expandedFolders.has(folder.id)) {
+                        toggleFolder(folder.id);
+                      }
+                    }}
+                    title="Add URL to folder"
+                  >
+                    <FontAwesomeIcon icon={faPlus} />
+                  </Button>
+                  <Button
+                    variant="danger"
+                    onClick={() => handleDeleteFolder(folder.id)}
+                    title="Delete folder"
+                    disabled={isLoading}
+                  >
+                    <FontAwesomeIcon icon={faTrash} />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Add Item Form */}
+              {addingToFolder === folder.id && (
+                <div className="p-3 border-t bg-gray-50 dark:bg-gray-800">
+                  <h6 className="font-medium mb-2">Add URL to Folder</h6>
+                  <div className="flex gap-2 items-end">
+                    <div className="flex-grow">
+                      <label htmlFor={`shortCode-${folder.id}`} className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
+                        Short Code *
+                      </label>
+                      <input
+                        type="text"
+                        id={`shortCode-${folder.id}`}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                        value={newItemShortCode}
+                        onChange={(e) => setNewItemShortCode(e.target.value)}
+                        placeholder="abc123"
+                        autoFocus
+                      />
+                    </div>
+                    <Button onClick={() => handleAddItemToFolder(folder.id)} disabled={isLoading}>
+                      Add
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={() => {
+                        setAddingToFolder(null);
+                        setNewItemShortCode('');
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Enter the short code of an existing URL from this Shlink server.
+                  </p>
+                </div>
+              )}
+
+              {/* Folder Items */}
+              {expandedFolders.has(folder.id) && folder.items.length > 0 && (
+                <div className="p-3 border-t">
+                  <Table
+                    header={
+                      <Table.Row>
+                        <Table.Cell>Short Code</Table.Cell>
+                        <Table.Cell>Short URL</Table.Cell>
+                        <Table.Cell>Added</Table.Cell>
+                        <Table.Cell>Actions</Table.Cell>
+                      </Table.Row>
+                    }
+                  >
+                    {folder.items.map((item) => (
+                      <Table.Row key={item.shortUrlId}>
+                        <Table.Cell>
+                          <code className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded text-sm">{item.shortCode}</code>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <a
+                            href={`${serverBaseUrl}/${item.shortCode}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline"
+                          >
+                            {serverBaseUrl}/{item.shortCode}
+                          </a>
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap">
+                          {formatDate(item.addedAt)}
+                        </Table.Cell>
+                        <Table.Cell>
+                          <Button
+                            variant="danger"
+                            onClick={() => handleRemoveItem(folder.id, item.shortUrlId)}
+                            title="Remove from folder"
+                            disabled={isLoading}
+                          >
+                            <FontAwesomeIcon icon={faTrash} />
+                          </Button>
+                        </Table.Cell>
+                      </Table.Row>
+                    ))}
+                  </Table>
+                </div>
+              )}
+
+              {/* Empty Folder Message */}
+              {expandedFolders.has(folder.id) && folder.items.length === 0 && (
+                <div className="p-3 border-t text-gray-500 text-center">
+                  <p className="mb-2">No URLs in this folder.</p>
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      setAddingToFolder(folder.id);
+                      setNewItemShortCode('');
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faPlus} className="mr-1" />
+                    Add URL
+                  </Button>
+                </div>
               )}
             </div>
-          </div>
-        )}
-
-        {folders.length === 0 ? (
-          <div className="text-center py-5">
-            <div className="mb-4">
-              <FontAwesomeIcon icon={faFolderOpen} className="text-primary" style={{ fontSize: '4rem' }} />
-            </div>
-            <h4 className="mb-3">No Folders Yet</h4>
-            <p className="text-muted mb-4" style={{ maxWidth: '400px', margin: '0 auto' }}>
-              Start organizing your short URLs by creating folders. Group them by campaign, topic, client, or any category that makes sense for you.
-            </p>
-            <button
-              type="button"
-              className="btn btn-primary btn-lg"
-              onClick={() => setShowCreateForm(true)}
-              disabled={isLoading}
-            >
-              <FontAwesomeIcon icon={faPlus} className="me-1" />
-              Create Your First Folder
-            </button>
-          </div>
-        ) : filteredFolders.length === 0 ? (
-          <div className="text-center py-5">
-            <FontAwesomeIcon icon={faSearch} className="text-muted mb-3" style={{ fontSize: '2rem' }} />
-            <p className="text-muted mb-2">No folders match your search.</p>
-            <button
-              type="button"
-              className="btn btn-outline-secondary btn-sm"
-              onClick={() => setSearchTerm('')}
-            >
-              Clear search
-            </button>
-          </div>
-        ) : (
-          <div className="d-flex flex-column gap-3">
-            {filteredFolders.map((folder) => (
-              <div
-                key={folder.id}
-                className="border rounded overflow-hidden"
-                style={{ borderColor: folder.color || '#dee2e6' }}
-              >
-                {/* Folder Header */}
-                <div
-                  className="p-3 d-flex align-items-center justify-content-between"
-                  style={{
-                    backgroundColor: folder.color ? `${folder.color}15` : '#f8f9fa',
-                    borderLeft: `4px solid ${folder.color || '#6c757d'}`,
-                  }}
-                >
-                  <div className="d-flex align-items-center gap-2 flex-grow-1">
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-link p-0 text-secondary"
-                      onClick={() => toggleFolder(folder.id)}
-                    >
-                      <FontAwesomeIcon
-                        icon={expandedFolders.has(folder.id) ? faChevronDown : faChevronRight}
-                      />
-                    </button>
-                    <span
-                      className="d-inline-block rounded"
-                      style={{
-                        width: 20,
-                        height: 20,
-                        backgroundColor: folder.color || '#6c757d',
-                        flexShrink: 0,
-                      }}
-                    />
-                    {editingFolder === folder.id ? (
-                      <div className="d-flex gap-2 align-items-center flex-wrap">
-                        <input
-                          type="text"
-                          className="form-control form-control-sm"
-                          value={editName}
-                          onChange={(e) => setEditName(e.target.value)}
-                          style={{ width: 180 }}
-                          autoFocus
-                        />
-                        <div className="d-flex gap-1 p-1 bg-white rounded">
-                          {FOLDER_COLORS.map((color) => (
-                            <button
-                              key={color}
-                              type="button"
-                              className="btn p-0"
-                              style={{
-                                width: 22,
-                                height: 22,
-                                backgroundColor: color,
-                                border: editColor === color ? '2px solid #000' : '1px solid #dee2e6',
-                                borderRadius: 4,
-                                transform: editColor === color ? 'scale(1.1)' : 'scale(1)',
-                              }}
-                              onClick={() => setEditColor(color)}
-                            />
-                          ))}
-                        </div>
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-success"
-                          onClick={() => handleUpdateFolder(folder.id)}
-                          disabled={isLoading}
-                        >
-                          Save
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-outline-secondary"
-                          onClick={() => setEditingFolder(null)}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="d-flex align-items-center gap-2">
-                        <span className="fw-bold">{folder.name}</span>
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-link text-muted p-0"
-                          onClick={() => startEditFolder(folder)}
-                          title="Edit folder name and color"
-                        >
-                          <FontAwesomeIcon icon={faEdit} />
-                        </button>
-                      </div>
-                    )}
-                    <span className="badge bg-secondary ms-2">{folder.itemCount} URLs</span>
-                  </div>
-                  <div className="d-flex gap-2">
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-outline-primary"
-                      onClick={() => {
-                        setAddingToFolder(addingToFolder === folder.id ? null : folder.id);
-                        setNewItemShortCode('');
-                        if (!expandedFolders.has(folder.id)) {
-                          toggleFolder(folder.id);
-                        }
-                      }}
-                      title="Add URL to folder"
-                    >
-                      <FontAwesomeIcon icon={faPlus} />
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-outline-danger"
-                      onClick={() => handleDeleteFolder(folder.id)}
-                      title="Delete folder"
-                      disabled={isLoading}
-                    >
-                      <FontAwesomeIcon icon={faTrash} />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Add Item Form */}
-                {addingToFolder === folder.id && (
-                  <div className="p-3 border-top bg-light">
-                    <h6 className="mb-2">Add URL to Folder</h6>
-                    <div className="d-flex gap-2 align-items-end">
-                      <div className="flex-grow-1">
-                        <label htmlFor={`shortCode-${folder.id}`} className="form-label small">
-                          Short Code *
-                        </label>
-                        <input
-                          type="text"
-                          id={`shortCode-${folder.id}`}
-                          className="form-control form-control-sm"
-                          value={newItemShortCode}
-                          onChange={(e) => setNewItemShortCode(e.target.value)}
-                          placeholder="abc123"
-                          autoFocus
-                        />
-                      </div>
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-success"
-                        onClick={() => handleAddItemToFolder(folder.id)}
-                        disabled={isLoading}
-                      >
-                        Add
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-secondary"
-                        onClick={() => {
-                          setAddingToFolder(null);
-                          setNewItemShortCode('');
-                        }}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                    <small className="text-muted">
-                      Enter the short code of an existing URL from this Shlink server.
-                    </small>
-                  </div>
-                )}
-
-                {/* Folder Items */}
-                {expandedFolders.has(folder.id) && folder.items.length > 0 && (
-                  <div className="p-3 border-top">
-                    <Table
-                      header={
-                        <Table.Row>
-                          <Table.Cell>Short Code</Table.Cell>
-                          <Table.Cell>Short URL</Table.Cell>
-                          <Table.Cell>Added</Table.Cell>
-                          <Table.Cell>Actions</Table.Cell>
-                        </Table.Row>
-                      }
-                    >
-                      {folder.items.map((item) => (
-                        <Table.Row key={item.shortUrlId}>
-                          <Table.Cell>
-                            <code className="bg-light px-2 py-1 rounded">{item.shortCode}</code>
-                          </Table.Cell>
-                          <Table.Cell>
-                            <a
-                              href={`${serverBaseUrl}/${item.shortCode}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary text-decoration-none"
-                            >
-                              {serverBaseUrl}/{item.shortCode}
-                            </a>
-                          </Table.Cell>
-                          <Table.Cell className="text-nowrap">
-                            {formatDate(item.addedAt)}
-                          </Table.Cell>
-                          <Table.Cell>
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-outline-danger"
-                              onClick={() => handleRemoveItem(folder.id, item.shortUrlId)}
-                              title="Remove from folder"
-                              disabled={isLoading}
-                            >
-                              <FontAwesomeIcon icon={faTrash} />
-                            </button>
-                          </Table.Cell>
-                        </Table.Row>
-                      ))}
-                    </Table>
-                  </div>
-                )}
-
-                {/* Empty Folder Message */}
-                {expandedFolders.has(folder.id) && folder.items.length === 0 && (
-                  <div className="p-3 border-top text-muted text-center">
-                    <p className="mb-2">No URLs in this folder.</p>
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-outline-primary"
-                      onClick={() => {
-                        setAddingToFolder(folder.id);
-                        setNewItemShortCode('');
-                      }}
-                    >
-                      <FontAwesomeIcon icon={faPlus} className="me-1" />
-                      Add URL
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Navigation */}
-        <div className="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
-          <Link to={`/server/${serverId}`} className="btn btn-outline-secondary">
-            &larr; Back to Server
-          </Link>
-          {folders.length > 0 && (
-            <small className="text-muted">
-              {folders.length} folder{folders.length !== 1 ? 's' : ''} &bull; {totalItems} URL{totalItems !== 1 ? 's' : ''} organized
-            </small>
-          )}
+          ))}
         </div>
-      </SimpleCard>
+      )}
+
+      {/* Back Link */}
+      <div>
+        <Link to={`/server/${serverId}`} className="text-blue-600 hover:underline">
+          &larr; Back to Server
+        </Link>
+      </div>
     </main>
   );
 }

@@ -372,14 +372,15 @@ describe('ApiKeysList', () => {
 
     const { user } = setUp(loaderData);
 
-    await waitFor(() => expect(screen.getByText(/Key Registry/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getAllByText(/Key Registry/).length).toBeGreaterThan(0));
 
-    // Click on Shlink Server Keys tab button
-    await user.click(screen.getByRole('button', { name: /Shlink Server Keys/ }));
+    // Click on Shlink Server Keys tab button - find by getting button containing "Shlink Server Keys"
+    const shlinkTabButton = screen.getByRole('button', { name: /Shlink Server Keys/ });
+    await user.click(shlinkTabButton);
 
     // Should show Shlink API key content
     await waitFor(() => expect(screen.getByText('Test Shlink Key')).toBeInTheDocument());
-    expect(screen.getByRole('button', { name: /Generate New API Key/ })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /Generate New API Key/ }).length).toBeGreaterThan(0);
   });
 
   it('shows Shlink API error when present', async () => {
