@@ -1,8 +1,12 @@
 import {
   faArrowRightFromBracket as faLogout,
+  faClock,
   faCogs,
+  faFolder,
   faHistory,
+  faKey,
   faServer,
+  faStar,
   faUser,
   faUsers,
 } from '@fortawesome/free-solid-svg-icons';
@@ -19,9 +23,20 @@ export interface BrandingConfig {
   brandColor?: string;
 }
 
-const NavBarMenuItems: FC = () => {
+interface NavBarMenuItemsProps {
+  allowLocalUserManagement: boolean;
+}
+
+// Extract serverId from pathname like /server/{serverId}/*
+const getServerIdFromPath = (pathname: string): string | null => {
+  const match = pathname.match(/^\/server\/([^/]+)/);
+  return match ? match[1] : null;
+};
+
+const NavBarMenuItems: FC<NavBarMenuItemsProps> = ({ allowLocalUserManagement }) => {
   const session = useSession();
   const { pathname } = useLocation();
+  const serverId = getServerIdFromPath(pathname);
 
   if (!session) {
     return null;
@@ -29,16 +44,56 @@ const NavBarMenuItems: FC = () => {
 
   return (
     <>
+      {/* Server features menu - shown when viewing a server */}
+      {serverId && (
+        <NavBar.Dropdown
+          buttonContent={(
+            <span className="flex items-center gap-1.5" data-testid="server-features-menu">
+              <FontAwesomeIcon icon={faServer} />
+              <span className="whitespace-nowrap">Server Tools</span>
+            </span>
+          )}
+        >
+          <Dropdown.Item
+            to={`/server/${serverId}/favorites-list`}
+            selected={pathname.includes('/favorites-list')}
+          >
+            <FontAwesomeIcon icon={faStar} className="mr-0.5" /> Favorites
+          </Dropdown.Item>
+          <Dropdown.Item
+            to={`/server/${serverId}/folders-list`}
+            selected={pathname.includes('/folders-list')}
+          >
+            <FontAwesomeIcon icon={faFolder} className="mr-0.5" /> Folders
+          </Dropdown.Item>
+          <Dropdown.Item
+            to={`/server/${serverId}/expiring-list`}
+            selected={pathname.includes('/expiring-list')}
+          >
+            <FontAwesomeIcon icon={faClock} className="mr-0.5" /> Expiring URLs
+          </Dropdown.Item>
+          <Dropdown.Item
+            to={`/server/${serverId}/api-keys-list`}
+            selected={pathname.includes('/api-keys-list')}
+          >
+            <FontAwesomeIcon icon={faKey} className="mr-0.5" /> API Keys
+          </Dropdown.Item>
+        </NavBar.Dropdown>
+      )}
+
       {session.role === 'admin' && (
         <>
-          <NavBar.MenuItem
-            to="/manage-users/1"
-            active={pathname.startsWith('/manage-users')}
-            className="flex items-center gap-1.5"
-          >
-            <FontAwesomeIcon icon={faUsers} />
-            <span className="whitespace-nowrap">Manage users</span>
-          </NavBar.MenuItem>
+          {/* Only show Manage users when local user management is allowed */}
+          {allowLocalUserManagement && (
+            <NavBar.MenuItem
+              to="/manage-users/1"
+              active={pathname.startsWith('/manage-users')}
+              className="flex items-center gap-1.5"
+            >
+              <FontAwesomeIcon icon={faUsers} />
+              <span className="whitespace-nowrap">Manage users</span>
+            </NavBar.MenuItem>
+          )}
           <NavBar.MenuItem
             to="/admin/audit-log"
             active={pathname.startsWith('/admin/audit-log')}
@@ -82,9 +137,10 @@ const NavBarMenuItems: FC = () => {
 
 export interface MainHeaderProps {
   branding: BrandingConfig;
+  allowLocalUserManagement: boolean;
 }
 
-export const MainHeader: FC<MainHeaderProps> = ({ branding }) => {
+export const MainHeader: FC<MainHeaderProps> = ({ branding, allowLocalUserManagement }) => {
   return (
     <NavBar
       className="[&]:fixed top-0 z-900"
@@ -94,7 +150,7 @@ export const MainHeader: FC<MainHeaderProps> = ({ branding }) => {
         </Link>
       )}
     >
-      <NavBarMenuItems />
+      <NavBarMenuItems allowLocalUserManagement={allowLocalUserManagement} />
     </NavBar>
   );
 };

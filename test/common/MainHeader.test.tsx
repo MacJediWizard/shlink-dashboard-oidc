@@ -11,10 +11,14 @@ import { renderWithEvents } from '../__helpers__/set-up-test';
 describe('<MainHeader />', () => {
   const defaultBranding: BrandingConfig = { title: 'Shlink' };
 
-  const setUp = (session: SessionData | null = null, branding: BrandingConfig = defaultBranding) => renderWithEvents(
+  const setUp = (
+    session: SessionData | null = null,
+    branding: BrandingConfig = defaultBranding,
+    allowLocalUserManagement = true,
+  ) => renderWithEvents(
     <SessionProvider value={session}>
       <MemoryRouter>
-        <MainHeader branding={branding} />
+        <MainHeader branding={branding} allowLocalUserManagement={allowLocalUserManagement} />
       </MemoryRouter>
     </SessionProvider>,
   );
@@ -84,5 +88,18 @@ describe('<MainHeader />', () => {
   it('displays default Shlink title when no custom branding', () => {
     setUp(null);
     expect(screen.getByText('Shlink')).toBeInTheDocument();
+  });
+
+  it('hides Manage users when allowLocalUserManagement is false', async () => {
+    const sessionData = fromPartial<SessionData>({ role: 'admin', displayName: 'Admin' });
+    const { user } = setUp(sessionData, defaultBranding, false);
+
+    // Open menu - need to click on the user menu button
+    await user.click(screen.getByRole('button', { name: 'Admin' }));
+
+    // Manage users should NOT be visible when local user management is disabled
+    expect(screen.queryByText('Manage users')).not.toBeInTheDocument();
+    // But Audit log should still be visible for admins
+    expect(screen.getByText('Audit log')).toBeInTheDocument();
   });
 });

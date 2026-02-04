@@ -179,6 +179,31 @@ describe('env.server', () => {
     });
   });
 
+  describe('canManageLocalUsers', () => {
+    it('returns true when OIDC is disabled', async () => {
+      process.env.SHLINK_DASHBOARD_OIDC_ENABLED = 'false';
+      const { canManageLocalUsers } = await import('../../app/utils/env.server');
+
+      expect(canManageLocalUsers()).toBe(true);
+    });
+
+    it('returns true when OIDC is enabled but local auth is also enabled', async () => {
+      process.env.SHLINK_DASHBOARD_OIDC_ENABLED = 'true';
+      process.env.SHLINK_DASHBOARD_LOCAL_AUTH_ENABLED = 'true';
+      const { canManageLocalUsers } = await import('../../app/utils/env.server');
+
+      expect(canManageLocalUsers()).toBe(true);
+    });
+
+    it('returns false when OIDC is enabled and local auth is disabled', async () => {
+      process.env.SHLINK_DASHBOARD_OIDC_ENABLED = 'true';
+      process.env.SHLINK_DASHBOARD_LOCAL_AUTH_ENABLED = 'false';
+      const { canManageLocalUsers } = await import('../../app/utils/env.server');
+
+      expect(canManageLocalUsers()).toBe(false);
+    });
+  });
+
   describe('getBrandingConfig', () => {
     it('returns default branding when no env vars set', async () => {
       const { getBrandingConfig } = await import('../../app/utils/env.server');

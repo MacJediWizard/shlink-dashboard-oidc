@@ -11,7 +11,7 @@ import { serverContainer } from './container/container.server';
 import { forkEmMiddleware } from './middleware/fork-em-middleware.server';
 import type { RouteComponentProps } from './routes/types';
 import { SettingsService } from './settings/SettingsService.server';
-import { getBrandingConfig } from './utils/env.server';
+import { canManageLocalUsers, getBrandingConfig } from './utils/env.server';
 import './tailwind.css';
 
 export const middleware = [forkEmMiddleware];
@@ -32,9 +32,10 @@ export async function loader(
   const settings = sessionData && (await settingsService.userSettings(sessionData.publicId));
   const sessionCookie = await authHelper.refreshSessionExpiration(request);
   const branding = getBrandingConfig();
+  const allowLocalUserManagement = canManageLocalUsers();
 
   return data(
-    { sessionData, settings, branding },
+    { sessionData, settings, branding, allowLocalUserManagement },
     sessionCookie ? {
       headers: { 'Set-Cookie': sessionCookie },
     } : undefined,
@@ -42,7 +43,7 @@ export async function loader(
 }
 
 export default function App({ loaderData }: RouteComponentProps<Route.ComponentProps>) {
-  const { sessionData, settings, branding } = loaderData;
+  const { sessionData, settings, branding, allowLocalUserManagement } = loaderData;
   const [systemPreferredTheme, setSystemPreferredTheme] = useState<Theme>('light');
 
   useEffect(() => {
@@ -59,7 +60,7 @@ export default function App({ loaderData }: RouteComponentProps<Route.ComponentP
       </head>
       <body>
         <SessionProvider value={sessionData ?? null}>
-          <MainHeader branding={branding} />
+          <MainHeader branding={branding} allowLocalUserManagement={allowLocalUserManagement} />
           <div className="min-h-screen flex flex-col pt-(--header-height)">
             <Outlet />
           </div>
