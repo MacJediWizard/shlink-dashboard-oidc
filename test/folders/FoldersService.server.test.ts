@@ -30,8 +30,8 @@ describe('FoldersService', () => {
   describe('getFolders', () => {
     it('returns folders for user and server', async () => {
       const folders = [
-        fromPartial<Folder>({ id: 1, name: 'Folder 1' }),
-        fromPartial<Folder>({ id: 2, name: 'Folder 2' }),
+        fromPartial<Folder>({ id: '1', name: 'Folder 1' }),
+        fromPartial<Folder>({ id: '2', name: 'Folder 2' }),
       ];
       find.mockResolvedValue(folders);
 
@@ -48,7 +48,7 @@ describe('FoldersService', () => {
 
   describe('getFolder', () => {
     it('returns folder by id', async () => {
-      const folder = fromPartial<Folder>({ id: 1, name: 'Folder 1' });
+      const folder = fromPartial<Folder>({ id: '1', name: 'Folder 1' });
       findOne.mockResolvedValue(folder);
 
       const result = await foldersService.getFolder('1', 'user-1', 'server-1');
@@ -91,7 +91,7 @@ describe('FoldersService', () => {
       findOneOrFail
         .mockResolvedValueOnce(user)
         .mockResolvedValueOnce(server);
-      findOne.mockResolvedValue(fromPartial<Folder>({ id: 1 })); // Existing folder
+      findOne.mockResolvedValue(fromPartial<Folder>({ id: '1' })); // Existing folder
 
       await expect(
         foldersService.createFolder('user-1', 'server-1', { name: 'Existing' }),
@@ -101,7 +101,7 @@ describe('FoldersService', () => {
 
   describe('updateFolder', () => {
     it('updates folder and returns it', async () => {
-      const folder = fromPartial<Folder>({ id: 1, name: 'Old Name', color: '#000' });
+      const folder = fromPartial<Folder>({ id: '1', name: 'Old Name', color: '#000' });
       findOne.mockResolvedValue(folder);
 
       const result = await foldersService.updateFolder('1', 'user-1', 'server-1', {
@@ -127,7 +127,7 @@ describe('FoldersService', () => {
 
   describe('deleteFolder', () => {
     it('deletes folder and returns true', async () => {
-      const folder = fromPartial<Folder>({ id: 1 });
+      const folder = fromPartial<Folder>({ id: '1' });
       findOne.mockResolvedValue(folder);
 
       const result = await foldersService.deleteFolder('1', 'user-1', 'server-1');
@@ -148,7 +148,7 @@ describe('FoldersService', () => {
 
   describe('addToFolder', () => {
     it('adds item to folder', async () => {
-      const folder = fromPartial<Folder>({ id: 1 });
+      const folder = fromPartial<Folder>({ id: '1' });
       findOne
         .mockResolvedValueOnce(folder) // getFolder
         .mockResolvedValueOnce(null); // no existing item
@@ -167,8 +167,8 @@ describe('FoldersService', () => {
     });
 
     it('returns existing item if already in folder', async () => {
-      const folder = fromPartial<Folder>({ id: 1 });
-      const existingItem = fromPartial<FolderItem>({ id: 1, shortUrlId: 'url-1' });
+      const folder = fromPartial<Folder>({ id: '1' });
+      const existingItem = fromPartial<FolderItem>({ id: '1', shortUrlId: 'url-1' });
       findOne
         .mockResolvedValueOnce(folder)
         .mockResolvedValueOnce(existingItem);
@@ -197,8 +197,8 @@ describe('FoldersService', () => {
 
   describe('removeFromFolder', () => {
     it('removes item and returns true', async () => {
-      const folder = fromPartial<Folder>({ id: 1 });
-      const item = fromPartial<FolderItem>({ id: 1 });
+      const folder = fromPartial<Folder>({ id: '1' });
+      const item = fromPartial<FolderItem>({ id: '1' });
       findOne
         .mockResolvedValueOnce(folder)
         .mockResolvedValueOnce(item);
@@ -218,7 +218,7 @@ describe('FoldersService', () => {
     });
 
     it('returns false when item not found', async () => {
-      const folder = fromPartial<Folder>({ id: 1 });
+      const folder = fromPartial<Folder>({ id: '1' });
       findOne
         .mockResolvedValueOnce(folder)
         .mockResolvedValueOnce(null);
@@ -231,8 +231,8 @@ describe('FoldersService', () => {
 
   describe('getFoldersForShortUrl', () => {
     it('returns folders containing the short URL', async () => {
-      const folder1 = fromPartial<Folder>({ id: 1, name: 'Folder 1' });
-      const folder2 = fromPartial<Folder>({ id: 2, name: 'Folder 2' });
+      const folder1 = fromPartial<Folder>({ id: '1', name: 'Folder 1' });
+      const folder2 = fromPartial<Folder>({ id: '2', name: 'Folder 2' });
       const items = [
         fromPartial<FolderItem>({ folder: folder1 }),
         fromPartial<FolderItem>({ folder: folder2 }),

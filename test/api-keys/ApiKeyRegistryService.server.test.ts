@@ -30,8 +30,8 @@ describe('ApiKeyRegistryService', () => {
   describe('getApiKeys', () => {
     it('returns API keys for user and server', async () => {
       const apiKeys = [
-        fromPartial<ApiKeyRegistry>({ id: 1, name: 'Key 1' }),
-        fromPartial<ApiKeyRegistry>({ id: 2, name: 'Key 2' }),
+        fromPartial<ApiKeyRegistry>({ id: '1', name: 'Key 1' }),
+        fromPartial<ApiKeyRegistry>({ id: '2', name: 'Key 2' }),
       ];
       find.mockResolvedValue(apiKeys);
 
@@ -48,7 +48,7 @@ describe('ApiKeyRegistryService', () => {
 
   describe('getApiKey', () => {
     it('returns API key by id', async () => {
-      const apiKey = fromPartial<ApiKeyRegistry>({ id: 1, name: 'Key 1' });
+      const apiKey = fromPartial<ApiKeyRegistry>({ id: '1', name: 'Key 1' });
       findOne.mockResolvedValue(apiKey);
 
       const result = await apiKeyService.getApiKey('1', 'user-1', 'server-1');
@@ -104,7 +104,7 @@ describe('ApiKeyRegistryService', () => {
   describe('updateApiKey', () => {
     it('updates API key and returns it', async () => {
       const apiKey = fromPartial<ApiKeyRegistry>({
-        id: 1,
+        id: '1',
         name: 'Old Name',
         isActive: true,
         updatedAt: new Date(),
@@ -134,7 +134,7 @@ describe('ApiKeyRegistryService', () => {
 
   describe('deleteApiKey', () => {
     it('deletes API key and returns true', async () => {
-      const apiKey = fromPartial<ApiKeyRegistry>({ id: 1 });
+      const apiKey = fromPartial<ApiKeyRegistry>({ id: '1' });
       findOne.mockResolvedValue(apiKey);
 
       const result = await apiKeyService.deleteApiKey('1', 'user-1', 'server-1');
@@ -156,7 +156,7 @@ describe('ApiKeyRegistryService', () => {
   describe('recordUsage', () => {
     it('records usage and returns true', async () => {
       const apiKey = fromPartial<ApiKeyRegistry>({
-        id: 1,
+        id: '1',
         usageCount: 5,
         lastUsedAt: null,
         updatedAt: new Date(),
@@ -183,7 +183,7 @@ describe('ApiKeyRegistryService', () => {
   describe('getExpiringSoon', () => {
     it('returns keys expiring within days', async () => {
       const expiringKeys = [
-        fromPartial<ApiKeyRegistry>({ id: 1, expiresAt: new Date() }),
+        fromPartial<ApiKeyRegistry>({ id: '1', expiresAt: new Date() }),
       ];
       find.mockResolvedValue(expiringKeys);
 
@@ -204,7 +204,7 @@ describe('ApiKeyRegistryService', () => {
 
   describe('getByService', () => {
     it('returns keys by service', async () => {
-      const keys = [fromPartial<ApiKeyRegistry>({ id: 1, service: 'n8n' })];
+      const keys = [fromPartial<ApiKeyRegistry>({ id: '1', service: 'n8n' })];
       find.mockResolvedValue(keys);
 
       const result = await apiKeyService.getByService('user-1', 'server-1', 'n8n');

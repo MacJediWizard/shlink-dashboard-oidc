@@ -20,8 +20,8 @@ describe('AuditService', () => {
 
   describe('log', () => {
     it('creates audit log entry', async () => {
-      const user = fromPartial<User>({ id: 1 });
-      const server = fromPartial<Server>({ id: 1 });
+      const user = fromPartial<User>({ id: '1' });
+      const server = fromPartial<Server>({ id: '1' });
 
       await auditService.log({
         action: 'login',
@@ -49,12 +49,12 @@ describe('AuditService', () => {
 
     it('creates audit log entry with minimal fields', async () => {
       await auditService.log({
-        action: 'test_action',
+        action: 'logout',
       });
 
       expect(persist).toHaveBeenCalledOnce();
       const logEntry = persist.mock.calls[0][0] as AuditLog;
-      expect(logEntry.action).toBe('test_action');
+      expect(logEntry.action).toBe('logout');
       expect(logEntry.resourceType).toBeNull();
       expect(logEntry.user).toBeNull();
       expect(logEntry.server).toBeNull();
@@ -64,7 +64,7 @@ describe('AuditService', () => {
       flush.mockRejectedValue(new Error('DB error'));
 
       // Should not throw
-      await auditService.log({ action: 'test' });
+      await auditService.log({ action: 'logout' });
 
       expect(persist).toHaveBeenCalledOnce();
     });
@@ -73,8 +73,8 @@ describe('AuditService', () => {
   describe('getAuditLogs', () => {
     it('returns logs with pagination', async () => {
       const logs = [
-        fromPartial<AuditLog>({ id: 1, action: 'login' }),
-        fromPartial<AuditLog>({ id: 2, action: 'logout' }),
+        fromPartial<AuditLog>({ id: '1', action: 'login' }),
+        fromPartial<AuditLog>({ id: '2', action: 'logout' }),
       ];
       find.mockResolvedValue(logs);
       count.mockResolvedValue(10);
