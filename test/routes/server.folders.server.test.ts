@@ -233,5 +233,256 @@ describe('server.$serverId.folders', () => {
       expect(response.status).toBe(400);
       expect(data.error).toBe('Invalid action');
     });
+
+    it('returns 400 when create is missing name', async () => {
+      const args = fromPartial<ActionFunctionArgs>({
+        params: { serverId: 'server-1' },
+        context: mockContext,
+        request: {
+          json: vi.fn().mockResolvedValue({
+            action: 'create',
+            color: '#ff0000',
+          }),
+        },
+      });
+
+      const response = await action(args, foldersService);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Folder name required');
+    });
+
+    it('returns 400 when create fails with error', async () => {
+      createFolder.mockRejectedValue(new Error('A folder with this name already exists'));
+
+      const args = fromPartial<ActionFunctionArgs>({
+        params: { serverId: 'server-1' },
+        context: mockContext,
+        request: {
+          json: vi.fn().mockResolvedValue({
+            action: 'create',
+            name: 'Existing Folder',
+          }),
+        },
+      });
+
+      const response = await action(args, foldersService);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('A folder with this name already exists');
+    });
+
+    it('updates a folder', async () => {
+      const folder = {
+        id: '1',
+        name: 'Updated Folder',
+        color: '#00ff00',
+      };
+      updateFolder.mockResolvedValue(folder);
+
+      const args = fromPartial<ActionFunctionArgs>({
+        params: { serverId: 'server-1' },
+        context: mockContext,
+        request: {
+          json: vi.fn().mockResolvedValue({
+            action: 'update',
+            folderId: '1',
+            name: 'Updated Folder',
+            color: '#00ff00',
+          }),
+        },
+      });
+
+      const response = await action(args, foldersService);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+    });
+
+    it('returns 400 when update is missing folderId', async () => {
+      const args = fromPartial<ActionFunctionArgs>({
+        params: { serverId: 'server-1' },
+        context: mockContext,
+        request: {
+          json: vi.fn().mockResolvedValue({
+            action: 'update',
+            name: 'Updated Folder',
+          }),
+        },
+      });
+
+      const response = await action(args, foldersService);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Folder ID required');
+    });
+
+    it('returns 404 when update folder not found', async () => {
+      updateFolder.mockResolvedValue(null);
+
+      const args = fromPartial<ActionFunctionArgs>({
+        params: { serverId: 'server-1' },
+        context: mockContext,
+        request: {
+          json: vi.fn().mockResolvedValue({
+            action: 'update',
+            folderId: 'nonexistent',
+            name: 'Updated Folder',
+          }),
+        },
+      });
+
+      const response = await action(args, foldersService);
+      const data = await response.json();
+
+      expect(response.status).toBe(404);
+      expect(data.error).toBe('Folder not found');
+    });
+
+    it('returns 400 when delete is missing folderId', async () => {
+      const args = fromPartial<ActionFunctionArgs>({
+        params: { serverId: 'server-1' },
+        context: mockContext,
+        request: {
+          json: vi.fn().mockResolvedValue({
+            action: 'delete',
+          }),
+        },
+      });
+
+      const response = await action(args, foldersService);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Folder ID required');
+    });
+
+    it('returns 404 when delete folder not found', async () => {
+      deleteFolder.mockResolvedValue(false);
+
+      const args = fromPartial<ActionFunctionArgs>({
+        params: { serverId: 'server-1' },
+        context: mockContext,
+        request: {
+          json: vi.fn().mockResolvedValue({
+            action: 'delete',
+            folderId: 'nonexistent',
+          }),
+        },
+      });
+
+      const response = await action(args, foldersService);
+      const data = await response.json();
+
+      expect(response.status).toBe(404);
+      expect(data.error).toBe('Folder not found');
+    });
+
+    it('returns 400 when addItem is missing required fields', async () => {
+      const args = fromPartial<ActionFunctionArgs>({
+        params: { serverId: 'server-1' },
+        context: mockContext,
+        request: {
+          json: vi.fn().mockResolvedValue({
+            action: 'addItem',
+            folderId: '1',
+            // Missing shortUrlId and shortCode
+          }),
+        },
+      });
+
+      const response = await action(args, foldersService);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Missing required fields');
+    });
+
+    it('returns 404 when addItem folder not found', async () => {
+      addToFolder.mockResolvedValue(null);
+
+      const args = fromPartial<ActionFunctionArgs>({
+        params: { serverId: 'server-1' },
+        context: mockContext,
+        request: {
+          json: vi.fn().mockResolvedValue({
+            action: 'addItem',
+            folderId: 'nonexistent',
+            shortUrlId: 'url-1',
+            shortCode: 'abc',
+          }),
+        },
+      });
+
+      const response = await action(args, foldersService);
+      const data = await response.json();
+
+      expect(response.status).toBe(404);
+      expect(data.error).toBe('Folder not found');
+    });
+
+    it('returns 400 when removeItem is missing required fields', async () => {
+      const args = fromPartial<ActionFunctionArgs>({
+        params: { serverId: 'server-1' },
+        context: mockContext,
+        request: {
+          json: vi.fn().mockResolvedValue({
+            action: 'removeItem',
+            folderId: '1',
+            // Missing shortUrlId
+          }),
+        },
+      });
+
+      const response = await action(args, foldersService);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Missing required fields');
+    });
+
+    it('returns 404 when removeItem not found', async () => {
+      removeFromFolder.mockResolvedValue(false);
+
+      const args = fromPartial<ActionFunctionArgs>({
+        params: { serverId: 'server-1' },
+        context: mockContext,
+        request: {
+          json: vi.fn().mockResolvedValue({
+            action: 'removeItem',
+            folderId: '1',
+            shortUrlId: 'nonexistent',
+          }),
+        },
+      });
+
+      const response = await action(args, foldersService);
+      const data = await response.json();
+
+      expect(response.status).toBe(404);
+      expect(data.error).toBe('Item not found');
+    });
+
+    it('returns 400 when getFoldersForUrl is missing shortUrlId', async () => {
+      const args = fromPartial<ActionFunctionArgs>({
+        params: { serverId: 'server-1' },
+        context: mockContext,
+        request: {
+          json: vi.fn().mockResolvedValue({
+            action: 'getFoldersForUrl',
+          }),
+        },
+      });
+
+      const response = await action(args, foldersService);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Short URL ID required');
+    });
   });
 });

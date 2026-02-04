@@ -163,6 +163,22 @@ describe('env.server', () => {
     });
   });
 
+  describe('session secrets transform', () => {
+    it('parses comma-separated session secrets', async () => {
+      process.env.SHLINK_DASHBOARD_SESSION_SECRETS = 'secret1, secret2, secret3';
+      const { env } = await import('../../app/utils/env.server');
+
+      expect(env.SHLINK_DASHBOARD_SESSION_SECRETS).toEqual(['secret1', 'secret2', 'secret3']);
+    });
+
+    it('handles single session secret', async () => {
+      process.env.SHLINK_DASHBOARD_SESSION_SECRETS = 'only-one-secret';
+      const { env } = await import('../../app/utils/env.server');
+
+      expect(env.SHLINK_DASHBOARD_SESSION_SECRETS).toEqual(['only-one-secret']);
+    });
+  });
+
   describe('getBrandingConfig', () => {
     it('returns default branding when no env vars set', async () => {
       const { getBrandingConfig } = await import('../../app/utils/env.server');

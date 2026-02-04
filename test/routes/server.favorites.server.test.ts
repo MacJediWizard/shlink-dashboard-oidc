@@ -173,5 +173,160 @@ describe('server.$serverId.favorites', () => {
       expect(response.status).toBe(400);
       expect(data.error).toBe('Invalid action');
     });
+
+    it('returns 400 when add is missing required fields', async () => {
+      const args = fromPartial<ActionFunctionArgs>({
+        params: { serverId: 'server-1' },
+        context: mockContext,
+        request: {
+          json: vi.fn().mockResolvedValue({
+            action: 'add',
+            shortUrlId: '1',
+            // Missing shortCode and longUrl
+          }),
+        },
+      });
+
+      const response = await action(args, favoritesService);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Missing required fields');
+    });
+
+    it('returns 400 when remove is missing shortUrlId', async () => {
+      const args = fromPartial<ActionFunctionArgs>({
+        params: { serverId: 'server-1' },
+        context: mockContext,
+        request: {
+          json: vi.fn().mockResolvedValue({
+            action: 'remove',
+          }),
+        },
+      });
+
+      const response = await action(args, favoritesService);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Short URL ID required');
+    });
+
+    it('returns 400 when check is missing shortUrlId', async () => {
+      const args = fromPartial<ActionFunctionArgs>({
+        params: { serverId: 'server-1' },
+        context: mockContext,
+        request: {
+          json: vi.fn().mockResolvedValue({
+            action: 'check',
+          }),
+        },
+      });
+
+      const response = await action(args, favoritesService);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Short URL ID required');
+    });
+
+    it('updates favorite notes', async () => {
+      const favorite = {
+        shortUrlId: '1',
+        shortCode: 'abc',
+        longUrl: 'https://example.com',
+        title: 'Example',
+        notes: 'Updated notes',
+        createdAt: new Date('2026-01-01'),
+      };
+      updateFavoriteNotes.mockResolvedValue(favorite);
+
+      const args = fromPartial<ActionFunctionArgs>({
+        params: { serverId: 'server-1' },
+        context: mockContext,
+        request: {
+          json: vi.fn().mockResolvedValue({
+            action: 'updateNotes',
+            shortUrlId: '1',
+            notes: 'Updated notes',
+          }),
+        },
+      });
+
+      const response = await action(args, favoritesService);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+    });
+
+    it('returns 400 when updateNotes is missing shortUrlId', async () => {
+      const args = fromPartial<ActionFunctionArgs>({
+        params: { serverId: 'server-1' },
+        context: mockContext,
+        request: {
+          json: vi.fn().mockResolvedValue({
+            action: 'updateNotes',
+            notes: 'Updated notes',
+          }),
+        },
+      });
+
+      const response = await action(args, favoritesService);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Short URL ID required');
+    });
+
+    it('returns 404 when updateNotes favorite not found', async () => {
+      updateFavoriteNotes.mockResolvedValue(null);
+
+      const args = fromPartial<ActionFunctionArgs>({
+        params: { serverId: 'server-1' },
+        context: mockContext,
+        request: {
+          json: vi.fn().mockResolvedValue({
+            action: 'updateNotes',
+            shortUrlId: 'nonexistent',
+            notes: 'Notes',
+          }),
+        },
+      });
+
+      const response = await action(args, favoritesService);
+      const data = await response.json();
+
+      expect(response.status).toBe(404);
+      expect(data.error).toBe('Favorite not found');
+    });
+
+    it('updates notes to null when not provided', async () => {
+      const favorite = {
+        shortUrlId: '1',
+        shortCode: 'abc',
+        longUrl: 'https://example.com',
+        title: 'Example',
+        notes: null,
+        createdAt: new Date('2026-01-01'),
+      };
+      updateFavoriteNotes.mockResolvedValue(favorite);
+
+      const args = fromPartial<ActionFunctionArgs>({
+        params: { serverId: 'server-1' },
+        context: mockContext,
+        request: {
+          json: vi.fn().mockResolvedValue({
+            action: 'updateNotes',
+            shortUrlId: '1',
+          }),
+        },
+      });
+
+      const response = await action(args, favoritesService);
+
+      expect(response.status).toBe(200);
+      expect(updateFavoriteNotes).toHaveBeenCalledWith('user-1', 'server-1', '1', null);
+    });
   });
 });
