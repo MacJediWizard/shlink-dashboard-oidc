@@ -16,7 +16,6 @@ import { useState } from 'react';
 import type { LoaderFunctionArgs } from 'react-router';
 import { Link, useFetcher, useRevalidator } from 'react-router';
 import { ApiKeyRegistryService } from '../api-keys/ApiKeyRegistryService.server';
-import { ShlinkApiKeyService } from '../api-keys/ShlinkApiKeyService.server';
 import { serverContainer } from '../container/container.server';
 import { authMiddleware, sessionContext } from '../middleware/middleware.server';
 import { ServersService } from '../servers/ServersService.server';
@@ -41,18 +40,11 @@ interface ApiKey {
   updatedAt: string;
 }
 
-interface ShlinkApiKey {
-  key: string;
-  name: string | null;
-  expirationDate: string | null;
-  roles: string[];
-}
 
 export async function loader(
   { params, context }: LoaderFunctionArgs,
   serversService: ServersService = serverContainer[ServersService.name],
   apiKeyService: ApiKeyRegistryService = serverContainer[ApiKeyRegistryService.name],
-  shlinkApiKeyService: ShlinkApiKeyService = serverContainer[ShlinkApiKeyService.name],
 ) {
   const session = context.get(sessionContext);
   const { serverId } = params;
@@ -64,15 +56,6 @@ export async function loader(
   const server = await serversService.getByPublicIdAndUser(serverId, session.publicId);
   const apiKeys = await apiKeyService.getApiKeys(session.publicId, serverId);
   const expiringKeys = await apiKeyService.getExpiringSoon(session.publicId, serverId, 14);
-
-  // Try to fetch Shlink API keys, but don't fail if it errors
-  let shlinkApiKeys: ShlinkApiKey[] = [];
-  let shlinkApiError: string | null = null;
-  try {
-    shlinkApiKeys = await shlinkApiKeyService.listApiKeys(server);
-  } catch (error: any) {
-    shlinkApiError = error.message || 'Failed to fetch Shlink API keys';
-  }
 
   return {
     serverId,
@@ -93,8 +76,6 @@ export async function loader(
       updatedAt: key.updatedAt.toISOString(),
     })),
     expiringKeyIds: expiringKeys.map((k) => k.id),
-    shlinkApiKeys,
-    shlinkApiError,
   };
 }
 
@@ -159,16 +140,15 @@ export default function ApiKeysList({ loaderData }: RouteComponentProps<Route.Co
     serverName,
     apiKeys,
     expiringKeyIds,
-    shlinkApiKeys,
-    shlinkApiError,
   } = loaderData as {
     serverId: string;
     serverName: string;
     apiKeys: ApiKey[];
     expiringKeyIds: number[];
-    shlinkApiKeys: ShlinkApiKey[];
-    shlinkApiError: string | null;
   };
+
+  // Filter keys generated through this dashboard (service = 'shlink-generated')
+  const generatedKeys = apiKeys.filter((key) => key.service === 'shlink-generated');
 
   const fetcher = useFetcher();
   const revalidator = useRevalidator();
@@ -241,7 +221,7 @@ export default function ApiKeysList({ loaderData }: RouteComponentProps<Route.Co
         name: shlinkKeyName.trim() || undefined,
         expirationDate: shlinkKeyExpires || undefined,
         registerInDashboard,
-        service: 'dashboard',
+        service: 'shlink-generated',
       },
       {
         method: 'POST',
@@ -279,20 +259,6 @@ export default function ApiKeysList({ loaderData }: RouteComponentProps<Route.Co
       {
         method: 'POST',
         action: `/server/${serverId}/api-keys`,
-        encType: 'application/json',
-      },
-    );
-    setTimeout(() => revalidator.revalidate(), 500);
-  };
-
-  const handleDeleteShlinkKey = async (apiKey: string) => {
-    if (!confirm('Delete this API key from the Shlink server? This cannot be undone.')) return;
-
-    fetcher.submit(
-      { action: 'delete', apiKey },
-      {
-        method: 'POST',
-        action: `/server/${serverId}/shlink-api-keys`,
         encType: 'application/json',
       },
     );
@@ -436,9 +402,9 @@ export default function ApiKeysList({ loaderData }: RouteComponentProps<Route.Co
           onClick={() => setActiveTab('shlink')}
         >
           <FontAwesomeIcon icon={faServer} className="mr-1" />
-          Shlink Server Keys
+          Generate Keys
           <span className="ml-2 rounded-full bg-gray-200 dark:bg-gray-700 px-2 py-0.5 text-xs">
-            {shlinkApiKeys.length}
+            {generatedKeys.length}
           </span>
         </Button>
       </div>
@@ -716,14 +682,14 @@ export default function ApiKeysList({ loaderData }: RouteComponentProps<Route.Co
       {/* Shlink API Keys Tab */}
       {activeTab === 'shlink' && (
         <SimpleCard
-          title="Shlink Server Keys"
+          title="Generate Shlink Keys"
           bodyClassName="flex flex-col gap-4"
         >
           <div className="flex justify-between items-center">
             <div>
-              <p className="font-bold">Server API Keys</p>
+              <p className="font-bold">Generate New API Keys</p>
               <p className="text-gray-600 dark:text-gray-400 text-sm">
-                Keys that exist directly on your Shlink server.
+                Create new API keys directly on your Shlink server.
               </p>
             </div>
             <Button onClick={() => setShowCreateShlinkForm(!showCreateShlinkForm)} disabled={isLoading}>
@@ -732,18 +698,18 @@ export default function ApiKeysList({ loaderData }: RouteComponentProps<Route.Co
             </Button>
           </div>
 
-          {shlinkApiError && (
-            <div className="flex items-start gap-3 p-4 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 border border-yellow-300 dark:border-yellow-700">
-              <FontAwesomeIcon icon={faExclamationTriangle} className="mt-0.5" />
-              <div>
-                <p className="font-bold">Cannot list existing API keys</p>
-                <p className="text-sm mt-1">
-                  Shlink doesn't expose an API endpoint to list existing keys (for security reasons).
-                  You can still generate new keys below, and they'll be displayed once for you to copy.
-                </p>
-              </div>
+          {/* Info note about key listing */}
+          <div className="flex items-start gap-3 p-4 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border border-blue-300 dark:border-blue-700">
+            <FontAwesomeIcon icon={faExclamationTriangle} className="mt-0.5" />
+            <div>
+              <p className="font-bold">Note about API key listing</p>
+              <p className="text-sm mt-1">
+                Shlink doesn't provide an API to list existing keys (for security reasons).
+                Only keys generated through this page will appear below. Keys created elsewhere
+                won't be visible here but can be manually registered in the Key Registry tab.
+              </p>
             </div>
-          )}
+          </div>
 
           {/* Created Key Display */}
           {createdKey && (
@@ -826,77 +792,66 @@ export default function ApiKeysList({ loaderData }: RouteComponentProps<Route.Co
             </div>
           )}
 
-          {!shlinkApiError && shlinkApiKeys.length === 0 ? (
+          {generatedKeys.length === 0 ? (
             <div className="text-center py-8">
               <FontAwesomeIcon icon={faServer} className="text-gray-400 text-5xl mb-4" />
-              <h4 className="text-gray-600 dark:text-gray-400 mb-2">No API Keys Found</h4>
+              <h4 className="text-gray-600 dark:text-gray-400 mb-2">No Generated Keys Yet</h4>
               <p className="text-gray-500 text-sm mb-4 max-w-md mx-auto">
-                Your Shlink server doesn't have any API keys yet.
+                Generate a new API key using the button above. The key will be shown once for you to copy.
               </p>
               <Button onClick={() => setShowCreateShlinkForm(true)} disabled={isLoading}>
                 <FontAwesomeIcon icon={faPlus} className="mr-1" />
                 Generate Your First API Key
               </Button>
             </div>
-          ) : !shlinkApiError && (
-            <Table
-              header={
-                <Table.Row>
-                  <Table.Cell>Name</Table.Cell>
-                  <Table.Cell>Key</Table.Cell>
-                  <Table.Cell>Expires</Table.Cell>
-                  <Table.Cell>Roles</Table.Cell>
-                  <Table.Cell>Actions</Table.Cell>
-                </Table.Row>
-              }
-            >
-              {shlinkApiKeys.map((key) => (
-                <Table.Row key={key.key}>
-                  <Table.Cell>
-                    {key.name || <span className="text-gray-500 italic">Unnamed</span>}
-                  </Table.Cell>
-                  <Table.Cell>
-                    <code className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded text-sm">
-                      ...{key.key.slice(-8)}
-                    </code>
-                    <button
-                      type="button"
-                      className="ml-2 text-blue-600 hover:text-blue-800"
-                      onClick={() => copyToClipboard(key.key)}
-                      title="Copy full key"
-                    >
-                      <FontAwesomeIcon icon={faClipboard} />
-                    </button>
-                  </Table.Cell>
-                  <Table.Cell>
-                    {key.expirationDate ? formatDate(key.expirationDate) : (
-                      <span className="text-gray-500">Never</span>
-                    )}
-                  </Table.Cell>
-                  <Table.Cell>
-                    {key.roles.length > 0 ? (
-                      key.roles.map((role) => (
-                        <span key={role} className="rounded-sm px-2 py-0.5 text-xs font-bold bg-gray-500 text-white mr-1">
-                          {role}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="rounded-sm px-2 py-0.5 text-xs font-bold bg-green-600 text-white">Admin</span>
-                    )}
-                  </Table.Cell>
-                  <Table.Cell>
-                    <Button
-                      variant="danger"
-                      onClick={() => handleDeleteShlinkKey(key.key)}
-                      title="Delete from Shlink"
-                      disabled={isLoading}
-                    >
-                      <FontAwesomeIcon icon={faTrash} />
+          ) : (
+            <>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Showing {generatedKeys.length} key{generatedKeys.length !== 1 ? 's' : ''} generated through this page:
+              </p>
+              <Table
+                header={
+                  <Table.Row>
+                    <Table.Cell>Name</Table.Cell>
+                    <Table.Cell>Key Hint</Table.Cell>
+                    <Table.Cell>Expires</Table.Cell>
+                    <Table.Cell>Status</Table.Cell>
+                    <Table.Cell>Actions</Table.Cell>
+                  </Table.Row>
+                }
+              >
+                {generatedKeys.map((key) => (
+                  <Table.Row key={key.id}>
+                    <Table.Cell>
+                      {key.name || <span className="text-gray-500 italic">Unnamed</span>}
+                    </Table.Cell>
+                    <Table.Cell>
+                      <code className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded text-sm">
+                        ...{key.keyHint}
+                      </code>
+                    </Table.Cell>
+                    <Table.Cell>
+                      {key.expiresAt ? formatDate(key.expiresAt) : (
+                        <span className="text-gray-500">Never</span>
+                      )}
+                    </Table.Cell>
+                    <Table.Cell>
+                      <StatusBadge isActive={key.isActive} onClick={() => handleToggleActive(key.id, key.isActive)} />
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Button
+                        variant="danger"
+                        onClick={() => handleDeleteKey(key.id)}
+                        title="Delete from registry"
+                        disabled={isLoading}
+                      >
+                        <FontAwesomeIcon icon={faTrash} />
                     </Button>
                   </Table.Cell>
                 </Table.Row>
               ))}
-            </Table>
+              </Table>
+            </>
           )}
         </SimpleCard>
       )}

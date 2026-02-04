@@ -1,7 +1,6 @@
 import { fromPartial } from '@total-typescript/shoehorn';
 import type { LoaderFunctionArgs } from 'react-router';
 import type { ApiKeyRegistryService } from '../../app/api-keys/ApiKeyRegistryService.server';
-import type { ShlinkApiKeyService } from '../../app/api-keys/ShlinkApiKeyService.server';
 import { loader } from '../../app/routes/server.$serverId.api-keys-list';
 import type { ServersService } from '../../app/servers/ServersService.server';
 
@@ -30,16 +29,10 @@ describe('server.$serverId.api-keys-list', () => {
     getExpiringSoon,
   });
 
-  const listApiKeys = vi.fn();
-  const shlinkApiKeyService = fromPartial<ShlinkApiKeyService>({
-    listApiKeys,
-  });
-
   beforeEach(() => {
     vi.clearAllMocks();
     getByPublicIdAndUser.mockResolvedValue(mockServer);
     getExpiringSoon.mockResolvedValue([]);
-    listApiKeys.mockResolvedValue([]);
   });
 
   describe('loader', () => {
@@ -50,7 +43,7 @@ describe('server.$serverId.api-keys-list', () => {
       });
 
       try {
-        await loader(args, serversService, apiKeyService, shlinkApiKeyService);
+        await loader(args, serversService, apiKeyService);
         expect.fail('Should have thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(Response);
@@ -83,7 +76,7 @@ describe('server.$serverId.api-keys-list', () => {
         context: mockContext,
       });
 
-      const result = await loader(args, serversService, apiKeyService, shlinkApiKeyService);
+      const result = await loader(args, serversService, apiKeyService);
 
       expect(result.serverId).toBe('server-1');
       expect(result.serverName).toBe('Test Server');
@@ -101,7 +94,7 @@ describe('server.$serverId.api-keys-list', () => {
         context: mockContext,
       });
 
-      const result = await loader(args, serversService, apiKeyService, shlinkApiKeyService);
+      const result = await loader(args, serversService, apiKeyService);
 
       expect(result.apiKeys).toHaveLength(0);
     });
@@ -131,7 +124,7 @@ describe('server.$serverId.api-keys-list', () => {
         context: mockContext,
       });
 
-      const result = await loader(args, serversService, apiKeyService, shlinkApiKeyService);
+      const result = await loader(args, serversService, apiKeyService);
 
       expect(result.apiKeys[0].expiresAt).toBeNull();
       expect(result.apiKeys[0].lastUsedAt).toBeNull();
@@ -148,43 +141,9 @@ describe('server.$serverId.api-keys-list', () => {
         context: mockContext,
       });
 
-      const result = await loader(args, serversService, apiKeyService, shlinkApiKeyService);
+      const result = await loader(args, serversService, apiKeyService);
 
       expect(result.expiringKeyIds).toEqual([1, 2]);
-    });
-
-    it('returns Shlink API keys', async () => {
-      const shlinkKeys = [
-        { key: 'abc123', name: 'Test Key', expirationDate: null, roles: [] },
-      ];
-      getApiKeys.mockResolvedValue([]);
-      listApiKeys.mockResolvedValue(shlinkKeys);
-
-      const args = fromPartial<LoaderFunctionArgs>({
-        params: { serverId: 'server-1' },
-        context: mockContext,
-      });
-
-      const result = await loader(args, serversService, apiKeyService, shlinkApiKeyService);
-
-      expect(result.shlinkApiKeys).toHaveLength(1);
-      expect(result.shlinkApiKeys[0].key).toBe('abc123');
-      expect(result.shlinkApiError).toBeNull();
-    });
-
-    it('handles Shlink API error gracefully', async () => {
-      getApiKeys.mockResolvedValue([]);
-      listApiKeys.mockRejectedValue(new Error('Connection failed'));
-
-      const args = fromPartial<LoaderFunctionArgs>({
-        params: { serverId: 'server-1' },
-        context: mockContext,
-      });
-
-      const result = await loader(args, serversService, apiKeyService, shlinkApiKeyService);
-
-      expect(result.shlinkApiKeys).toHaveLength(0);
-      expect(result.shlinkApiError).toBe('Connection failed');
     });
   });
 });
