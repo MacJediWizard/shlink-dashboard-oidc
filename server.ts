@@ -14,6 +14,16 @@ const viteDevServer = isProd
   );
 
 const app = express();
+
+// Health endpoint for monitoring (Gatus, etc.)
+app.get('/health', (_req, res) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    service: 'shlink-dashboard',
+  });
+});
+
 app.use(
   viteDevServer
     ? viteDevServer.middlewares
