@@ -1,6 +1,7 @@
 import {
   faArrowRightFromBracket as faLogout,
   faCogs,
+  faHistory,
   faServer,
   faUser,
   faUsers,
@@ -11,6 +12,12 @@ import type { FC } from 'react';
 import { Link, useLocation } from 'react-router';
 import { useSession } from '../auth/session-context';
 import { ShlinkLogo } from './ShlinkLogo';
+
+export interface BrandingConfig {
+  title: string;
+  logoUrl?: string;
+  brandColor?: string;
+}
 
 const NavBarMenuItems: FC = () => {
   const session = useSession();
@@ -23,14 +30,24 @@ const NavBarMenuItems: FC = () => {
   return (
     <>
       {session.role === 'admin' && (
-        <NavBar.MenuItem
-          to="/manage-users/1"
-          active={pathname.startsWith('/manage-users')}
-          className="flex items-center gap-1.5"
-        >
-          <FontAwesomeIcon icon={faUsers} />
-          <span className="whitespace-nowrap">Manage users</span>
-        </NavBar.MenuItem>
+        <>
+          <NavBar.MenuItem
+            to="/manage-users/1"
+            active={pathname.startsWith('/manage-users')}
+            className="flex items-center gap-1.5"
+          >
+            <FontAwesomeIcon icon={faUsers} />
+            <span className="whitespace-nowrap">Manage users</span>
+          </NavBar.MenuItem>
+          <NavBar.MenuItem
+            to="/admin/audit-log"
+            active={pathname.startsWith('/admin/audit-log')}
+            className="flex items-center gap-1.5"
+          >
+            <FontAwesomeIcon icon={faHistory} />
+            <span className="whitespace-nowrap">Audit log</span>
+          </NavBar.MenuItem>
+        </>
       )}
       <NavBar.Dropdown
         buttonContent={(
@@ -63,13 +80,17 @@ const NavBarMenuItems: FC = () => {
   );
 };
 
-export const MainHeader: FC = () => {
+export interface MainHeaderProps {
+  branding: BrandingConfig;
+}
+
+export const MainHeader: FC<MainHeaderProps> = ({ branding }) => {
   return (
     <NavBar
       className="[&]:fixed top-0 z-900"
       brand={(
         <Link to="" className="[&]:text-white no-underline flex gap-2 w-25">
-          <ShlinkLogo className="w-[26px]" color="white" /> Shlink
+          <ShlinkLogo className="w-[26px]" color="white" logoUrl={branding.logoUrl} /> {branding.title}
         </Link>
       )}
     >

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 export interface ShlinkLogoProps {
   color?: string;
   className?: string;
+  logoUrl?: string;
 }
 
 const useBrandColor = () => {
@@ -16,8 +17,13 @@ const useBrandColor = () => {
   return color;
 };
 
-export const ShlinkLogo = ({ color, className }: ShlinkLogoProps) => {
+export const ShlinkLogo = ({ color, className, logoUrl }: ShlinkLogoProps) => {
   const theBrandColor = useBrandColor();
+
+  if (logoUrl) {
+    return <img src={logoUrl} alt="Logo" className={className} />;
+  }
+
   return (
     <svg className={className} viewBox="0 0 512 512" version="1.1" xmlns="http://www.w3.org/2000/svg">
       <g fill={color ?? theBrandColor}>

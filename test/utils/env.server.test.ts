@@ -162,4 +162,50 @@ describe('env.server', () => {
       expect(isProd()).toBe(false);
     });
   });
+
+  describe('getBrandingConfig', () => {
+    it('returns default branding when no env vars set', async () => {
+      const { getBrandingConfig } = await import('../../app/utils/env.server');
+
+      expect(getBrandingConfig()).toEqual({
+        title: 'Shlink',
+        logoUrl: undefined,
+        brandColor: undefined,
+      });
+    });
+
+    it('returns custom title when set', async () => {
+      process.env.SHLINK_DASHBOARD_TITLE = 'My Custom Dashboard';
+      const { getBrandingConfig } = await import('../../app/utils/env.server');
+
+      expect(getBrandingConfig().title).toBe('My Custom Dashboard');
+    });
+
+    it('returns custom logo URL when set', async () => {
+      process.env.SHLINK_DASHBOARD_LOGO_URL = 'https://example.com/logo.png';
+      const { getBrandingConfig } = await import('../../app/utils/env.server');
+
+      expect(getBrandingConfig().logoUrl).toBe('https://example.com/logo.png');
+    });
+
+    it('returns custom brand color when set', async () => {
+      process.env.SHLINK_DASHBOARD_BRAND_COLOR = '#FF5733';
+      const { getBrandingConfig } = await import('../../app/utils/env.server');
+
+      expect(getBrandingConfig().brandColor).toBe('#FF5733');
+    });
+
+    it('returns all custom branding when all env vars set', async () => {
+      process.env.SHLINK_DASHBOARD_TITLE = 'My App';
+      process.env.SHLINK_DASHBOARD_LOGO_URL = 'https://example.com/logo.png';
+      process.env.SHLINK_DASHBOARD_BRAND_COLOR = '#123ABC';
+      const { getBrandingConfig } = await import('../../app/utils/env.server');
+
+      expect(getBrandingConfig()).toEqual({
+        title: 'My App',
+        logoUrl: 'https://example.com/logo.png',
+        brandColor: '#123ABC',
+      });
+    });
+  });
 });

@@ -6,6 +6,9 @@ import { exchangeCodeForTokens, isOidcEnabled } from '../../auth/oidc.server';
 import { serverContainer } from '../../container/container.server';
 import { UsersService } from '../../users/UsersService.server';
 import { isProd } from '../../utils/env.server';
+import { createLogger } from '../../utils/logger.server';
+
+const logger = createLogger('OIDC');
 
 const OIDC_STATE_COOKIE = 'oidc_state';
 
@@ -34,12 +37,12 @@ export async function loader(
 
   // Handle OIDC errors - log details but return generic message
   if (error) {
-    console.error('OIDC provider error:', { error, errorDescription });
+    logger.error('Provider returned error', { error, errorDescription });
     return redirect(`/login?error=${encodeURIComponent(GENERIC_AUTH_ERROR)}`);
   }
 
   if (!code || !state) {
-    console.error('OIDC callback missing code or state');
+    logger.error('Callback missing code or state');
     return redirect(`/login?error=${encodeURIComponent(GENERIC_AUTH_ERROR)}`);
   }
 
@@ -49,7 +52,7 @@ export async function loader(
   const oidcStateCookie = cookies[OIDC_STATE_COOKIE];
 
   if (!oidcStateCookie) {
-    console.error('OIDC state cookie missing');
+    logger.error('State cookie missing');
     return redirect(`/login?error=${encodeURIComponent(GENERIC_AUTH_ERROR)}`);
   }
 
@@ -57,7 +60,7 @@ export async function loader(
   try {
     oidcState = JSON.parse(oidcStateCookie);
   } catch {
-    console.error('Failed to parse OIDC state cookie');
+    logger.error('Failed to parse state cookie');
     return redirect(`/login?error=${encodeURIComponent(GENERIC_AUTH_ERROR)}`);
   }
 
@@ -83,7 +86,7 @@ export async function loader(
     return response;
   } catch (e: any) {
     // Log detailed error for debugging, but return generic message to user
-    console.error('OIDC callback error:', e.message, e.stack);
+    logger.error('Callback error', { message: e.message, stack: e.stack });
     return redirect(`/login?error=${encodeURIComponent(GENERIC_AUTH_ERROR)}`);
   }
 }

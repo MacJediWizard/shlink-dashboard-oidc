@@ -14,6 +14,11 @@ export default [
   ...prefix('/server/:serverId/', [
     route('shlink-api/:method', './routes/shlink-api-rpc-proxy.ts'),
     route('tags/colors', './routes/save-tags-colors.ts'),
+    route('favorites', './routes/server.$serverId.favorites.ts'),
+    route('folders', './routes/server.$serverId.folders.ts'),
+    route('expiring', './routes/server.$serverId.expiring.tsx'),
+    route('api-keys', './routes/server.$serverId.api-keys.ts'),
+    route('shlink-api-keys', './routes/server.$serverId.shlink-api-keys.ts'),
     route('*', './routes/shlink-component-wrapper.tsx'),
   ]),
 
@@ -36,4 +41,9 @@ export default [
     route(':serverPublicId/edit', './routes/servers/edit-server.tsx'),
     route(':page', './routes/servers/list-servers.tsx'),
   ])),
+
+  // Admin routes
+  ...prefix('/admin', [
+    route('audit-log/:page?', './routes/admin/audit-log.tsx'),
+  ]),
 ] satisfies RouteConfig;

@@ -3,15 +3,18 @@ import { fromPartial } from '@total-typescript/shoehorn';
 import { MemoryRouter } from 'react-router';
 import type { SessionData } from '../../app/auth/session-context';
 import { SessionProvider } from '../../app/auth/session-context';
+import type { BrandingConfig } from '../../app/common/MainHeader';
 import { MainHeader } from '../../app/common/MainHeader';
 import { checkAccessibility } from '../__helpers__/accessibility';
 import { renderWithEvents } from '../__helpers__/set-up-test';
 
 describe('<MainHeader />', () => {
-  const setUp = (session: SessionData | null = null) => renderWithEvents(
+  const defaultBranding: BrandingConfig = { title: 'Shlink' };
+
+  const setUp = (session: SessionData | null = null, branding: BrandingConfig = defaultBranding) => renderWithEvents(
     <SessionProvider value={session}>
       <MemoryRouter>
-        <MainHeader />
+        <MainHeader branding={branding} />
       </MemoryRouter>
     </SessionProvider>,
   );
@@ -71,5 +74,15 @@ describe('<MainHeader />', () => {
     } else {
       expect(screen.queryByText('Manage servers')).not.toBeInTheDocument();
     }
+  });
+
+  it('displays custom branding title', () => {
+    setUp(null, { title: 'My Custom App' });
+    expect(screen.getByText('My Custom App')).toBeInTheDocument();
+  });
+
+  it('displays default Shlink title when no custom branding', () => {
+    setUp(null);
+    expect(screen.getByText('Shlink')).toBeInTheDocument();
   });
 });

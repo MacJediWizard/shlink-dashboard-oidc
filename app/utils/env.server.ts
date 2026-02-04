@@ -36,6 +36,11 @@ const envVariables = z.object({
   SHLINK_DASHBOARD_OIDC_DEFAULT_ROLE: z.enum(supportedRoles).optional().default('managed-user'),
   SHLINK_DASHBOARD_OIDC_PROVIDER_NAME: z.string().optional().default('SSO'),
   SHLINK_DASHBOARD_LOCAL_AUTH_ENABLED: z.stringbool({ truthy: ['true'] }).optional().default(true),
+
+  // Branding Configuration
+  SHLINK_DASHBOARD_TITLE: z.string().optional().default('Shlink'),
+  SHLINK_DASHBOARD_LOGO_URL: z.string().url().optional(),
+  SHLINK_DASHBOARD_BRAND_COLOR: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
 });
 
 export const env = envVariables.parse(process.env);
@@ -47,6 +52,12 @@ export const isOidcEnabled = () => env.SHLINK_DASHBOARD_OIDC_ENABLED === true;
 export const isLocalAuthEnabled = () => env.SHLINK_DASHBOARD_LOCAL_AUTH_ENABLED !== false;
 
 export const getOidcProviderName = () => env.SHLINK_DASHBOARD_OIDC_PROVIDER_NAME ?? 'SSO';
+
+export const getBrandingConfig = () => ({
+  title: env.SHLINK_DASHBOARD_TITLE ?? 'Shlink',
+  logoUrl: env.SHLINK_DASHBOARD_LOGO_URL,
+  brandColor: env.SHLINK_DASHBOARD_BRAND_COLOR,
+});
 
 export const getOidcConfig = () => {
   if (!isOidcEnabled()) {

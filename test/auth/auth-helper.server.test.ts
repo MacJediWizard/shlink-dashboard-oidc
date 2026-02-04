@@ -28,6 +28,7 @@ describe('AuthHelper', () => {
       [`http://example.com?redirect-to=${encodeURIComponent('/foo/bar')}`, '/foo/bar'],
       [`http://example.com?redirect-to=${encodeURIComponent('https://example.com')}`, '/'],
     ])('authenticates user and redirects to expected location', async (url, expectedRedirect) => {
+      authenticate.mockResolvedValue({ username: 'testuser', role: 'admin' });
       const authHelper = setUp();
       const request = buildRequest(url);
 

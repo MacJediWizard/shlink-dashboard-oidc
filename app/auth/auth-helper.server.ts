@@ -2,9 +2,12 @@ import type { Session, SessionStorage } from 'react-router';
 import { redirect } from 'react-router';
 import type { Authenticator } from 'remix-auth';
 import type { User } from '../entities/User';
+import { createLogger } from '../utils/logger.server';
 import { requestQueryParam } from '../utils/request.server';
 import { CREDENTIALS_STRATEGY } from './auth.server';
 import type { SessionData, ShlinkSessionData } from './session-context';
+
+const logger = createLogger('Auth');
 
 /**
  * Validate redirect URL to prevent open redirect attacks.
@@ -60,6 +63,8 @@ export class AuthHelper {
     const redirectTo = requestQueryParam(request, 'redirect-to');
     const successRedirect = getSafeRedirectUrl(redirectTo);
 
+    logger.info('User logged in', { username: sessionData.username, role: sessionData.role });
+
     return redirect(successRedirect, {
       headers: { 'Set-Cookie': await this.#sessionStorage.commitSession(session) },
     });
@@ -82,13 +87,18 @@ export class AuthHelper {
 
     const successRedirect = getSafeRedirectUrl(redirectTo);
 
+    logger.info('User logged in via OIDC', { username: user.username, role: user.role });
+
     return redirect(successRedirect, {
       headers: { 'Set-Cookie': await this.#sessionStorage.commitSession(session) },
     });
   }
 
   async logout(request: Request): Promise<Response> {
-    const session = await this.sessionFromRequest(request);
+    const [sessionData, session] = await this.sessionAndData(request);
+    if (sessionData) {
+      logger.info('User logged out', { username: sessionData.username });
+    }
     return redirect('/login', {
       headers: { 'Set-Cookie': await this.#sessionStorage.destroySession(session) },
     });

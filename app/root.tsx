@@ -11,6 +11,7 @@ import { serverContainer } from './container/container.server';
 import { forkEmMiddleware } from './middleware/fork-em-middleware.server';
 import type { RouteComponentProps } from './routes/types';
 import { SettingsService } from './settings/SettingsService.server';
+import { getBrandingConfig } from './utils/env.server';
 import './tailwind.css';
 
 export const middleware = [forkEmMiddleware];
@@ -30,9 +31,10 @@ export async function loader(
 
   const settings = sessionData && (await settingsService.userSettings(sessionData.publicId));
   const sessionCookie = await authHelper.refreshSessionExpiration(request);
+  const branding = getBrandingConfig();
 
   return data(
-    { sessionData, settings },
+    { sessionData, settings, branding },
     sessionCookie ? {
       headers: { 'Set-Cookie': sessionCookie },
     } : undefined,
@@ -40,7 +42,7 @@ export async function loader(
 }
 
 export default function App({ loaderData }: RouteComponentProps<Route.ComponentProps>) {
-  const { sessionData, settings } = loaderData;
+  const { sessionData, settings, branding } = loaderData;
   const [systemPreferredTheme, setSystemPreferredTheme] = useState<Theme>('light');
 
   useEffect(() => {
@@ -51,13 +53,13 @@ export default function App({ loaderData }: RouteComponentProps<Route.ComponentP
   return (
     <html lang="en" data-theme={settings?.ui?.theme ?? systemPreferredTheme}>
       <head>
-        <title>Shlink dashboard</title>
+        <title>{branding.title} dashboard</title>
         <Meta />
         <Links />
       </head>
       <body>
         <SessionProvider value={sessionData ?? null}>
-          <MainHeader />
+          <MainHeader branding={branding} />
           <div className="min-h-screen flex flex-col pt-(--header-height)">
             <Outlet />
           </div>
