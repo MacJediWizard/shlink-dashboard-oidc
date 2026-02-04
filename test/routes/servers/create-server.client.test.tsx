@@ -33,16 +33,15 @@ describe('create-server', () => {
       expect(screen.getByLabelText(/^API key/)).toBeInTheDocument();
     });
 
-    // TODO Investigate why this test does not pass, as there's a similar one in create-user test
-    it.skip('disables form while saving', async () => {
+    it('disables form while saving', async () => {
       const { user } = await setUp();
 
       await user.type(screen.getByLabelText(/^Name/), 'The name');
       await user.type(screen.getByLabelText(/^URL/), 'https://example.com');
-      await user.type(screen.getByLabelText(/^Name/), 'api-key');
+      await user.type(screen.getByLabelText(/^API key/), 'test-api-key');
       const submitPromise = user.click(screen.getByRole('button', { name: 'Create server' }));
 
-      await waitFor(() => expect(screen.getByRole('button', { name: 'Saving...' })).toBeDisabled());
+      await waitFor(() => expect(screen.getByText('Saving...')).toBeDisabled());
       await submitPromise;
     });
   });
