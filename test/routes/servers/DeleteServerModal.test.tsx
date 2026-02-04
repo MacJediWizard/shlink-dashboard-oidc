@@ -56,4 +56,24 @@ describe('<DeleteServerModal />', () => {
     await user.click(screen.getByRole('button', { name: 'Delete server' }));
     expect(onClose).toHaveBeenCalled();
   });
+
+  it('handles confirm click when no server is provided', async () => {
+    const Stub = createRoutesStub([
+      {
+        path: '/',
+        Component: () => <DeleteServerModal open={true} onClose={onClose} serverToDelete={undefined} />,
+      },
+      {
+        path: '/manage-servers/delete',
+        action: () => ({}),
+      },
+    ]);
+
+    const { user } = renderWithEvents(<Stub />);
+
+    // Should not throw when clicking confirm without a server
+    await user.click(screen.getByRole('button', { name: 'Delete server' }));
+    // onClose should not be called because serverToDelete is undefined
+    expect(onClose).not.toHaveBeenCalled();
+  });
 });

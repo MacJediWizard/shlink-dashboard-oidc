@@ -8,6 +8,9 @@ describe('ApiKeysList', () => {
     serverId: 'server-1',
     serverName: 'Test Server',
     apiKeys: [] as any[],
+    expiringKeyIds: [] as number[],
+    shlinkApiKeys: [] as any[],
+    shlinkApiError: null as string | null,
   };
 
   const setUp = (loaderData = defaultLoaderData) => {
@@ -26,7 +29,7 @@ describe('ApiKeysList', () => {
 
   it('renders page title', async () => {
     setUp();
-    await waitFor(() => expect(screen.getByText(/API Keys Registry - Test Server/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/API Keys - Test Server/)).toBeInTheDocument());
   });
 
   it('shows empty state when no API keys', async () => {
@@ -349,5 +352,77 @@ describe('ApiKeysList', () => {
     await user.click(submitButtons[1]);
 
     await waitFor(() => expect(screen.queryByText('Register API Key')).not.toBeInTheDocument());
+  });
+
+  it('can switch to Shlink API Keys tab', async () => {
+    const loaderData = {
+      ...defaultLoaderData,
+      shlinkApiKeys: [
+        {
+          key: 'abc123-full-key',
+          name: 'Test Shlink Key',
+          expirationDate: null,
+          roles: [],
+        },
+      ],
+    };
+
+    const { user } = setUp(loaderData);
+
+    await waitFor(() => expect(screen.getByText(/Key Registry/)).toBeInTheDocument());
+
+    // Click on Shlink API Keys tab button
+    await user.click(screen.getByRole('button', { name: /Shlink API Keys/ }));
+
+    // Should show Shlink API key content
+    await waitFor(() => expect(screen.getByText('Test Shlink Key')).toBeInTheDocument());
+    expect(screen.getByText('Generate New Key')).toBeInTheDocument();
+  });
+
+  it('shows Shlink API error when present', async () => {
+    const loaderData = {
+      ...defaultLoaderData,
+      shlinkApiError: 'Failed to connect to Shlink server',
+    };
+
+    const { user } = setUp(loaderData);
+
+    await waitFor(() => expect(screen.getByRole('button', { name: /Shlink API Keys/ })).toBeInTheDocument());
+
+    // Click on Shlink API Keys tab
+    await user.click(screen.getByRole('button', { name: /Shlink API Keys/ }));
+
+    // Should show error message
+    await waitFor(() => expect(screen.getByText('Failed to connect to Shlink server')).toBeInTheDocument());
+  });
+
+  it('shows expiring keys warning when keys expiring soon', async () => {
+    const loaderData = {
+      ...defaultLoaderData,
+      expiringKeyIds: [1, 2],
+      apiKeys: [
+        {
+          id: 1,
+          name: 'Expiring Key',
+          description: null,
+          keyHint: 'abcd',
+          service: 'dashboard',
+          tags: [],
+          expiresAt: '2026-02-10T00:00:00.000Z',
+          lastUsedAt: null,
+          usageCount: 0,
+          isActive: true,
+          notes: null,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: '2026-01-01T00:00:00.000Z',
+        },
+      ],
+    };
+
+    setUp(loaderData);
+
+    // Should show warning about expiring keys (text: "2 API keys expiring within 14 days!")
+    await waitFor(() => expect(screen.getByText(/2 API keys/)).toBeInTheDocument());
+    expect(screen.getByText(/expiring within 14 days/)).toBeInTheDocument();
   });
 });

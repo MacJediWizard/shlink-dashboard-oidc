@@ -43,6 +43,10 @@ describe('list-servers', () => {
           path: '/manage-servers/create',
           Component: () => <>Server creation</>,
         },
+        {
+          path: '/manage-servers/delete',
+          action: () => ({}),
+        },
       ]);
 
       const result = renderWithEvents(<Stub initialEntries={[path]} />);
@@ -119,6 +123,27 @@ describe('list-servers', () => {
       await waitFor(
         () => expect(navigate).toHaveBeenCalledWith(expect.stringContaining('search-term=hello'), { replace: true }),
       );
+    });
+
+    it('opens delete server modal when clicking delete button', async () => {
+      const servers = [fromPartial<ServerItem>({
+        name: 'Server to Delete',
+        publicId: 'delete-me',
+        baseUrl: 'https://example.com',
+        usersCount: 1,
+      })];
+      const { user } = await setUp({ servers });
+
+      // Open the row menu
+      await user.click(screen.getByLabelText('Options for Server to Delete'));
+
+      // Click delete server
+      await user.click(screen.getByRole('menuitem', { name: 'Delete server' }));
+
+      // Modal should open with confirmation text
+      expect(screen.getByText(/Are you sure you want to delete server/)).toBeInTheDocument();
+      // Dialog should have a Cancel button (unique to modal)
+      expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
     });
   });
 });

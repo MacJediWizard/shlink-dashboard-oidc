@@ -7,6 +7,7 @@ describe('FoldersList', () => {
   const defaultLoaderData = {
     serverId: 'server-1',
     serverName: 'Test Server',
+    serverBaseUrl: 'https://shlink.example.com',
     folders: [] as any[],
   };
 
@@ -78,7 +79,7 @@ describe('FoldersList', () => {
     await user.click(screen.getByRole('button', { name: /New Folder/i }));
 
     expect(screen.getByText('Create New Folder')).toBeInTheDocument();
-    expect(screen.getByLabelText('Name')).toBeInTheDocument();
+    expect(screen.getByLabelText('Name *')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Create' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
   });
@@ -292,7 +293,7 @@ describe('FoldersList', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: /New Folder/i })).toBeInTheDocument());
     await user.click(screen.getByRole('button', { name: /New Folder/i }));
 
-    const nameInput = screen.getByLabelText('Name');
+    const nameInput = screen.getByLabelText('Name *');
     await user.type(nameInput, 'My New Folder');
     await user.click(screen.getByRole('button', { name: 'Create' }));
 

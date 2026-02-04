@@ -27,6 +27,12 @@ describe('AuthHelper', () => {
       ['http://example.com', '/'],
       [`http://example.com?redirect-to=${encodeURIComponent('/foo/bar')}`, '/foo/bar'],
       [`http://example.com?redirect-to=${encodeURIComponent('https://example.com')}`, '/'],
+      // Test sanitization of protocol handlers (colon)
+      [`http://example.com?redirect-to=${encodeURIComponent('javascript:alert(1)')}`, '/'],
+      // Test sanitization of backslash (path traversal)
+      [`http://example.com?redirect-to=${encodeURIComponent('/test\\..\\admin')}`, '/'],
+      // Test double slash prevention
+      [`http://example.com?redirect-to=${encodeURIComponent('//evil.com')}`, '/'],
     ])('authenticates user and redirects to expected location', async (url, expectedRedirect) => {
       authenticate.mockResolvedValue({ username: 'testuser', role: 'admin' });
       const authHelper = setUp();
