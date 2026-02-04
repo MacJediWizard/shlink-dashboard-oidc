@@ -396,8 +396,9 @@ describe('ApiKeysList', () => {
     // Click on Shlink Server Keys tab
     await user.click(screen.getByRole('button', { name: /Shlink Server Keys/ }));
 
-    // Should show error message
-    await waitFor(() => expect(screen.getByText('Failed to connect to Shlink server')).toBeInTheDocument());
+    // Should show error message - now displays a user-friendly message
+    await waitFor(() => expect(screen.getByText('Cannot list existing API keys')).toBeInTheDocument());
+    expect(screen.getByText(/Shlink doesn't expose an API endpoint/)).toBeInTheDocument();
   });
 
   it('shows expiring keys warning when keys expiring soon', async () => {

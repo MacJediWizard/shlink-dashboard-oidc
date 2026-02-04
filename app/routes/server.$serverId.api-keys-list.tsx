@@ -733,9 +733,15 @@ export default function ApiKeysList({ loaderData }: RouteComponentProps<Route.Co
           </div>
 
           {shlinkApiError && (
-            <div className="flex items-center gap-2 p-4 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 border border-red-300 dark:border-red-700">
-              <FontAwesomeIcon icon={faExclamationTriangle} />
-              {shlinkApiError}
+            <div className="flex items-start gap-3 p-4 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 border border-yellow-300 dark:border-yellow-700">
+              <FontAwesomeIcon icon={faExclamationTriangle} className="mt-0.5" />
+              <div>
+                <p className="font-bold">Cannot list existing API keys</p>
+                <p className="text-sm mt-1">
+                  Shlink doesn't expose an API endpoint to list existing keys (for security reasons).
+                  You can still generate new keys below, and they'll be displayed once for you to copy.
+                </p>
+              </div>
             </div>
           )}
 
@@ -772,13 +778,13 @@ export default function ApiKeysList({ loaderData }: RouteComponentProps<Route.Co
 
           {/* Create Shlink Key Form */}
           {showCreateShlinkForm && (
-            <div className="p-4 rounded-lg border-2 border-green-500 bg-green-50 dark:bg-green-900/20">
+            <div className="p-4 rounded-lg border-2 border-blue-500 bg-blue-50 dark:bg-blue-900/20">
               <h3 className="font-bold mb-3 flex items-center gap-2">
                 <FontAwesomeIcon icon={faPlus} />
                 Generate New Shlink API Key
               </h3>
-              <div className="flex items-center gap-2 p-3 bg-blue-100 dark:bg-blue-900/30 rounded mb-4">
-                <FontAwesomeIcon icon={faExclamationTriangle} className="text-blue-600" />
+              <div className="flex items-center gap-2 p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded mb-4">
+                <FontAwesomeIcon icon={faExclamationTriangle} className="text-yellow-600" />
                 <strong>Important:</strong> The generated API key will only be displayed once!
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
