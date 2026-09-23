@@ -1,6 +1,7 @@
 import {
   faArrowRightFromBracket as faLogout,
   faClock,
+  faEye,
   faCogs,
   faFolder,
   faHistory,
@@ -61,6 +62,9 @@ const NavBarMenuItems: FC<NavBarMenuItemsProps> = ({ allowLocalUserManagement })
           </Dropdown.Item>
           <Dropdown.Item to={`/server/${serverId}/expiring`} selected={pathname.includes('/expiring')}>
             <FontAwesomeIcon icon={faClock} className="mr-0.5" /> Expiring URLs
+          </Dropdown.Item>
+          <Dropdown.Item to={`/server/${serverId}/pixels`} selected={pathname.includes('/pixels')}>
+            <FontAwesomeIcon icon={faEye} className="mr-0.5" /> Pixels
           </Dropdown.Item>
         </NavBar.Dropdown>
       )}
