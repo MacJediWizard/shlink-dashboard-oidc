@@ -92,7 +92,7 @@ function formatDate(isoDate: string): string {
 }
 
 export default function FoldersList({ loaderData }: RouteComponentProps<Route.ComponentProps>) {
-  const { serverId, serverName, serverBaseUrl, folders } = loaderData as {
+  const { serverId, serverName, serverBaseUrl, folders } = loaderData as unknown as {
     serverId: string;
     serverName: string;
     serverBaseUrl: string;
@@ -247,7 +247,8 @@ export default function FoldersList({ loaderData }: RouteComponentProps<Route.Co
             Folders
           </h2>
           <p className="text-gray-600 dark:text-gray-400">
-            <strong>{serverName}</strong> &bull; {folders.length} folder{folders.length !== 1 ? 's' : ''} &bull; {totalItems} total URL{totalItems !== 1 ? 's' : ''}
+            <strong>{serverName}</strong> &bull; {folders.length} folder{folders.length !== 1 ? 's' : ''} &bull;{' '}
+            {totalItems} total URL{totalItems !== 1 ? 's' : ''}
           </p>
         </div>
         <Button onClick={() => setShowCreateForm(!showCreateForm)} disabled={isLoading}>
@@ -301,7 +302,10 @@ export default function FoldersList({ loaderData }: RouteComponentProps<Route.Co
             </div>
           </div>
           {/* Preview */}
-          <div className="p-3 rounded" style={{ backgroundColor: `${newFolderColor}20`, borderLeft: `4px solid ${newFolderColor}` }}>
+          <div
+            className="p-3 rounded"
+            style={{ backgroundColor: `${newFolderColor}20`, borderLeft: `4px solid ${newFolderColor}` }}
+          >
             <div className="flex items-center gap-2">
               <span
                 className="inline-block rounded"
@@ -375,9 +379,7 @@ export default function FoldersList({ loaderData }: RouteComponentProps<Route.Co
                     className="text-gray-500 hover:text-gray-700"
                     onClick={() => toggleFolder(folder.id)}
                   >
-                    <FontAwesomeIcon
-                      icon={expandedFolders.has(folder.id) ? faChevronDown : faChevronRight}
-                    />
+                    <FontAwesomeIcon icon={expandedFolders.has(folder.id) ? faChevronDown : faChevronRight} />
                   </button>
                   <span
                     className="inline-block rounded"
@@ -471,7 +473,10 @@ export default function FoldersList({ loaderData }: RouteComponentProps<Route.Co
                   <h6 className="font-medium mb-2">Add URL to Folder</h6>
                   <div className="flex gap-2 items-end">
                     <div className="flex-grow">
-                      <label htmlFor={`shortCode-${folder.id}`} className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
+                      <label
+                        htmlFor={`shortCode-${folder.id}`}
+                        className="block text-sm text-gray-600 dark:text-gray-400 mb-1"
+                      >
                         Short Code *
                       </label>
                       <input
@@ -519,7 +524,9 @@ export default function FoldersList({ loaderData }: RouteComponentProps<Route.Co
                     {folder.items.map((item) => (
                       <Table.Row key={item.shortUrlId}>
                         <Table.Cell>
-                          <code className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded text-sm">{item.shortCode}</code>
+                          <code className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded text-sm">
+                            {item.shortCode}
+                          </code>
                         </Table.Cell>
                         <Table.Cell>
                           <a
@@ -531,9 +538,7 @@ export default function FoldersList({ loaderData }: RouteComponentProps<Route.Co
                             {serverBaseUrl}/{item.shortCode}
                           </a>
                         </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap">
-                          {formatDate(item.addedAt)}
-                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap">{formatDate(item.addedAt)}</Table.Cell>
                         <Table.Cell>
                           <Button
                             variant="danger"

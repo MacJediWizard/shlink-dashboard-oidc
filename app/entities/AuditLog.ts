@@ -18,7 +18,7 @@ export const auditActions = [
   'delete_server',
 ] as const;
 
-export type AuditAction = typeof auditActions[number];
+export type AuditAction = (typeof auditActions)[number];
 
 export class AuditLog extends BaseEntity {
   action!: AuditAction;

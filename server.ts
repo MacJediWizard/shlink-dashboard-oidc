@@ -6,12 +6,11 @@ const isProd = NODE_ENV === 'production';
 
 const viteDevServer = isProd
   ? null
-  : await import('vite').then(
-    (vite) =>
+  : await import('vite').then((vite) =>
       vite.createServer({
         server: { middlewareMode: true },
       }),
-  );
+    );
 
 const app = express();
 
@@ -24,16 +23,12 @@ app.get('/health', (_req, res) => {
   });
 });
 
-app.use(
-  viteDevServer
-    ? viteDevServer.middlewares
-    : express.static('client'),
-);
+app.use(viteDevServer ? viteDevServer.middlewares : express.static('client'));
 
 const build = viteDevServer
   ? () => viteDevServer.ssrLoadModule('virtual:react-router/server-build')
-  // @ts-expect-error This code branch is used only when that file is built
-  : await import('./server/index.js');
+  : // @ts-expect-error This code branch is used only when that file is built
+    await import('./server/index.js');
 
 app.all('*splat', createRequestHandler({ build }));
 

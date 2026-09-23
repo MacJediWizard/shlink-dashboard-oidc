@@ -31,9 +31,10 @@ describe('login', () => {
   const createMockRequest = (formData: FormData = new FormData(), url = 'https://example.com/login') => {
     const request = fromPartial<Request>({
       url,
-      clone: () => fromPartial<Request>({
-        formData: () => Promise.resolve(formData),
-      }),
+      clone: () =>
+        fromPartial<Request>({
+          formData: () => Promise.resolve(formData),
+        }),
     });
     return request;
   };
@@ -51,24 +52,26 @@ describe('login', () => {
       formData.set('username', 'testuser');
       formData.set('password', 'testpass');
       const request = createMockRequest(formData);
+      const url = new URL('https://example.com/login');
 
-      await action(fromPartial({ request }), authHelper);
+      await action(fromPartial({ request, url }), authHelper);
 
-      expect(login).toHaveBeenCalledWith(request);
+      expect(login).toHaveBeenCalledWith(request, url);
     });
 
-    it.each([
-      { message: 'Incorrect password' },
-      { message: 'User not found' },
-    ])('returns json response when credentials are incorrect', async ({ message }) => {
-      login.mockRejectedValue(new Error(message));
+    it.each([{ message: 'Incorrect password' }, { message: 'User not found' }])(
+      'returns json response when credentials are incorrect',
+      async ({ message }) => {
+        login.mockRejectedValue(new Error(message));
 
-      const formData = new FormData();
-      const request = createMockRequest(formData);
-      const response = await action(fromPartial({ request }), authHelper);
+        const formData = new FormData();
+        const request = createMockRequest(formData);
+        const url = new URL('https://example.com/login');
+        const response = await action(fromPartial({ request, url }), authHelper);
 
-      expect(response).toEqual({ error: true });
-    });
+        expect(response).toEqual({ error: true });
+      },
+    );
 
     it('re-throws unknown errors', async () => {
       const e = new Error('Unknown error');
@@ -105,7 +108,7 @@ describe('login', () => {
       formData.set('intent', 'oidc');
       const request = createMockRequest(formData);
 
-      const response = await action(fromPartial({ request }), authHelper) as Response;
+      const response = (await action(fromPartial({ request }), authHelper)) as Response;
 
       expect(response.headers.get('Location')).toBe('https://auth.example.com/authorize');
       expect(response.headers.get('Set-Cookie')).toContain('oidc_state=');
@@ -125,7 +128,7 @@ describe('login', () => {
       formData.set('redirect-to', '/dashboard');
       const request = createMockRequest(formData);
 
-      const response = await action(fromPartial({ request }), authHelper) as Response;
+      const response = (await action(fromPartial({ request }), authHelper)) as Response;
 
       const cookie = response.headers.get('Set-Cookie') ?? '';
       const decodedCookie = decodeURIComponent(cookie);
@@ -138,7 +141,10 @@ describe('login', () => {
       isAuthenticated.mockResolvedValue(true);
 
       const request = fromPartial<Request>({ url: 'https://example.com/login' });
-      const response = await loader(fromPartial({ request }), authHelper) as Response;
+      const response = (await loader(
+        fromPartial({ request, url: new URL(request.url || 'https://example.com/login') }),
+        authHelper,
+      )) as Response;
 
       expect(response).instanceof(Response);
       expect(response.headers.get('Location')).toBe('/');
@@ -151,7 +157,10 @@ describe('login', () => {
       mockedGetOidcProviderName.mockReturnValue('SSO');
 
       const request = fromPartial<Request>({ url: 'https://example.com/login' });
-      const response = await loader(fromPartial({ request }), authHelper);
+      const response = await loader(
+        fromPartial({ request, url: new URL(request.url || 'https://example.com/login') }),
+        authHelper,
+      );
 
       expect(response).toEqual({ oidcEnabled: false, localAuthEnabled: true, oidcProviderName: 'SSO' });
     });
@@ -168,7 +177,10 @@ describe('login', () => {
       mockedBuildAuthorizationUrl.mockResolvedValue('https://auth.example.com/authorize');
 
       const request = fromPartial<Request>({ url: 'https://example.com/login' });
-      const response = await loader(fromPartial({ request }), authHelper) as Response;
+      const response = (await loader(
+        fromPartial({ request, url: new URL(request.url || 'https://example.com/login') }),
+        authHelper,
+      )) as Response;
 
       expect(response.headers.get('Location')).toBe('https://auth.example.com/authorize');
       expect(response.headers.get('Set-Cookie')).toContain('oidc_state=');
@@ -181,7 +193,10 @@ describe('login', () => {
       mockedGetOidcProviderName.mockReturnValue('Authentik');
 
       const request = fromPartial<Request>({ url: 'https://example.com/login' });
-      const response = await loader(fromPartial({ request }), authHelper);
+      const response = await loader(
+        fromPartial({ request, url: new URL(request.url || 'https://example.com/login') }),
+        authHelper,
+      );
 
       expect(response).toEqual({
         oidcEnabled: true,
@@ -204,7 +219,10 @@ describe('login', () => {
       const request = fromPartial<Request>({
         url: 'https://example.com/login?redirect-to=/dashboard',
       });
-      const response = await loader(fromPartial({ request }), authHelper) as Response;
+      const response = (await loader(
+        fromPartial({ request, url: new URL(request.url || 'https://example.com/login') }),
+        authHelper,
+      )) as Response;
 
       const cookie = response.headers.get('Set-Cookie') ?? '';
       const decodedCookie = decodeURIComponent(cookie);

@@ -21,30 +21,34 @@ export class FoldersService {
   }
 
   async getFolders(userPublicId: string, serverPublicId: string): Promise<Folder[]> {
-    return this.#em.find(Folder, {
-      user: { publicId: userPublicId },
-      server: { publicId: serverPublicId },
-    }, {
-      populate: ['items'],
-      orderBy: { name: 'ASC' },
-    });
+    return this.#em.find(
+      Folder,
+      {
+        user: { publicId: userPublicId },
+        server: { publicId: serverPublicId },
+      },
+      {
+        populate: ['items'],
+        orderBy: { name: 'ASC' },
+      },
+    );
   }
 
   async getFolder(folderId: string, userPublicId: string, serverPublicId: string): Promise<Folder | null> {
-    return this.#em.findOne(Folder, {
-      id: folderId,
-      user: { publicId: userPublicId },
-      server: { publicId: serverPublicId },
-    }, {
-      populate: ['items'],
-    });
+    return this.#em.findOne(
+      Folder,
+      {
+        id: folderId,
+        user: { publicId: userPublicId },
+        server: { publicId: serverPublicId },
+      },
+      {
+        populate: ['items'],
+      },
+    );
   }
 
-  async createFolder(
-    userPublicId: string,
-    serverPublicId: string,
-    input: CreateFolderInput,
-  ): Promise<Folder> {
+  async createFolder(userPublicId: string, serverPublicId: string, input: CreateFolderInput): Promise<Folder> {
     const [user, server] = await Promise.all([
       this.#em.findOneOrFail(User, { publicId: userPublicId }),
       this.#em.findOneOrFail(Server, { publicId: serverPublicId }),
@@ -97,18 +101,14 @@ export class FoldersService {
     return folder;
   }
 
-  async deleteFolder(
-    folderId: string,
-    userPublicId: string,
-    serverPublicId: string,
-  ): Promise<boolean> {
+  async deleteFolder(folderId: string, userPublicId: string, serverPublicId: string): Promise<boolean> {
     const folder = await this.getFolder(folderId, userPublicId, serverPublicId);
 
     if (!folder) {
       return false;
     }
 
-    await this.#em.removeAndFlush(folder);
+    await this.#em.remove(folder).flush();
     return true;
   }
 
@@ -167,24 +167,24 @@ export class FoldersService {
       return false;
     }
 
-    await this.#em.removeAndFlush(item);
+    await this.#em.remove(item).flush();
     return true;
   }
 
-  async getFoldersForShortUrl(
-    userPublicId: string,
-    serverPublicId: string,
-    shortUrlId: string,
-  ): Promise<Folder[]> {
-    const items = await this.#em.find(FolderItem, {
-      shortUrlId,
-      folder: {
-        user: { publicId: userPublicId },
-        server: { publicId: serverPublicId },
+  async getFoldersForShortUrl(userPublicId: string, serverPublicId: string, shortUrlId: string): Promise<Folder[]> {
+    const items = await this.#em.find(
+      FolderItem,
+      {
+        shortUrlId,
+        folder: {
+          user: { publicId: userPublicId },
+          server: { publicId: serverPublicId },
+        },
       },
-    }, {
-      populate: ['folder'],
-    });
+      {
+        populate: ['folder'],
+      },
+    );
 
     return items.map((item) => item.folder);
   }

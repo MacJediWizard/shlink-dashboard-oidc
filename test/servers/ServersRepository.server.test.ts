@@ -1,5 +1,5 @@
-import { fromPartial } from '@total-typescript/shoehorn';
 import type { EntityManager } from '@mikro-orm/core';
+import { fromPartial } from '@total-typescript/shoehorn';
 import type { Server } from '../../app/entities/Server';
 import type { User } from '../../app/entities/User';
 import { ServersRepository } from '../../app/servers/ServersRepository.server';
@@ -31,7 +31,7 @@ describe('ServersRepository', () => {
       create,
       em,
       nativeDelete,
-    });
+    } as any);
     // Bind the actual methods to the mocked repo
     Object.assign(repo, {
       findByPublicIdAndUserId: ServersRepository.prototype.findByPublicIdAndUserId.bind(repo),
@@ -89,7 +89,7 @@ describe('ServersRepository', () => {
 
       expect(find).toHaveBeenCalledWith(
         expect.objectContaining({
-          '$or': expect.any(Array),
+          $or: expect.any(Array),
         }),
         expect.any(Object),
       );
@@ -100,10 +100,7 @@ describe('ServersRepository', () => {
 
       await repo.findByUserId('user-1', { limit: 10, offset: 20 });
 
-      expect(find).toHaveBeenCalledWith(
-        expect.any(Object),
-        expect.objectContaining({ limit: 10, offset: 20 }),
-      );
+      expect(find).toHaveBeenCalledWith(expect.any(Object), expect.objectContaining({ limit: 10, offset: 20 }));
     });
 
     it('populates users when requested', async () => {
@@ -111,10 +108,7 @@ describe('ServersRepository', () => {
 
       await repo.findByUserId('user-1', { populateUsers: true });
 
-      expect(find).toHaveBeenCalledWith(
-        expect.any(Object),
-        expect.objectContaining({ populate: ['users'] }),
-      );
+      expect(find).toHaveBeenCalledWith(expect.any(Object), expect.objectContaining({ populate: ['users'] }));
     });
   });
 
@@ -134,12 +128,14 @@ describe('ServersRepository', () => {
       const result = await repo.createServer('user-1', serverData);
 
       expect(em.findOneOrFail).toHaveBeenCalled();
-      expect(create).toHaveBeenCalledWith(expect.objectContaining({
-        name: 'New Server',
-        baseUrl: 'https://example.com',
-        apiKey: 'key',
-        publicId: expect.any(String),
-      }));
+      expect(create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'New Server',
+          baseUrl: 'https://example.com',
+          apiKey: 'key',
+          publicId: expect.any(String),
+        }),
+      );
       expect(newServer.users.add).toHaveBeenCalledWith(user);
       expect(persist).toHaveBeenCalledWith(newServer);
       expect(result).toEqual(newServer);
@@ -197,8 +193,7 @@ describe('ServersRepository', () => {
     it('throws NotFoundError when user not found', async () => {
       (em.findOne as ReturnType<typeof vi.fn>).mockResolvedValue(null);
 
-      await expect(repo.setServersForUser('user-1', { servers: [] }))
-        .rejects.toThrow(NotFoundError);
+      await expect(repo.setServersForUser('user-1', { servers: [] })).rejects.toThrow(NotFoundError);
     });
 
     it('throws ValidationError when user is not managed-user', async () => {
@@ -209,8 +204,7 @@ describe('ServersRepository', () => {
       });
       (em.findOne as ReturnType<typeof vi.fn>).mockResolvedValue(user);
 
-      await expect(repo.setServersForUser('user-1', { servers: [] }))
-        .rejects.toThrow(ValidationError);
+      await expect(repo.setServersForUser('user-1', { servers: [] })).rejects.toThrow(ValidationError);
     });
 
     it('sets servers for managed user', async () => {
@@ -221,10 +215,7 @@ describe('ServersRepository', () => {
         role: 'managed-user',
         servers: { removeAll, add },
       });
-      const servers = [
-        fromPartial<Server>({ publicId: 'server-1' }),
-        fromPartial<Server>({ publicId: 'server-2' }),
-      ];
+      const servers = [fromPartial<Server>({ publicId: 'server-1' }), fromPartial<Server>({ publicId: 'server-2' })];
 
       (em.findOne as ReturnType<typeof vi.fn>).mockResolvedValue(user);
       find.mockResolvedValue(servers);

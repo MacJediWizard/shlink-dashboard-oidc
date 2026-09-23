@@ -6,7 +6,6 @@ import { buildAuthorizationUrl, generateOidcState, isOidcEnabled } from '../auth
 import { CenteredContentLayout } from '../common/CenteredContentLayout';
 import { serverContainer } from '../container/container.server';
 import { getOidcProviderName, isLocalAuthEnabled, isProd } from '../utils/env.server';
-import { requestQueryParam } from '../utils/request.server';
 
 const INCORRECT_CREDENTIAL_ERROR_PREFIXES = ['Incorrect password', 'User not found'];
 const OIDC_STATE_COOKIE = 'oidc_state';
@@ -17,11 +16,11 @@ function buildOidcStateCookie(stateCookie: string): string {
 }
 
 export async function loader(
-  { request }: LoaderFunctionArgs,
+  { request, url }: LoaderFunctionArgs,
   authHelper: AuthHelper = serverContainer[AuthHelper.name],
 ) {
   // If the user is already authenticated, redirect to home
-  const isAuthenticated = await authHelper.isAuthenticated(request);
+  const isAuthenticated = await authHelper.isAuthenticated(request, url);
   if (isAuthenticated) {
     return redirect('/');
   }
@@ -31,7 +30,7 @@ export async function loader(
 
   // If OIDC is enabled and local auth is disabled, auto-redirect to OIDC
   if (oidcEnabled && !localAuthEnabled) {
-    const redirectTo = requestQueryParam(request, 'redirect-to');
+    const redirectTo = url.searchParams.get('redirect-to');
     const oidcState = generateOidcState();
     const authUrl = await buildAuthorizationUrl(oidcState);
 
@@ -55,7 +54,7 @@ export async function loader(
 }
 
 export async function action(
-  { request }: ActionFunctionArgs,
+  { request, url }: ActionFunctionArgs,
   authHelper: AuthHelper = serverContainer[AuthHelper.name],
 ) {
   const formData = await request.clone().formData();
@@ -87,7 +86,7 @@ export async function action(
 
   // Handle local auth login
   try {
-    return await authHelper.login(request);
+    return await authHelper.login(request, url);
   } catch (e: any) {
     // TODO Use a more robust way to detect errors
     if (INCORRECT_CREDENTIAL_ERROR_PREFIXES.some((prefix) => e.message.startsWith(prefix))) {
@@ -153,11 +152,7 @@ export default function Login() {
                 : 'Username or password are incorrect'}
             </div>
           )}
-          {errorParam && (
-            <div className="text-danger">
-              Authentication error: {errorParam}
-            </div>
-          )}
+          {errorParam && <div className="text-danger">Authentication error: {errorParam}</div>}
         </div>
       </SimpleCard>
     </CenteredContentLayout>

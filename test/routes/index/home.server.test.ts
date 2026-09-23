@@ -25,10 +25,11 @@ describe('home', () => {
       getUserServers.mockResolvedValue(servers);
 
       const request: Request = fromPartial({});
-      const data = await loader(fromPartial({ request }), serversService, authHelper);
+      const url = new URL('https://example.com');
+      const data = await loader(fromPartial({ request, url }), serversService, authHelper);
 
       expect(data.servers).toStrictEqual(servers);
-      expect(getSession).toHaveBeenCalledWith(request, '/login');
+      expect(getSession).toHaveBeenCalledWith(request, url, '/login');
       expect(getUserServers).toHaveBeenCalledWith(sessionData.publicId);
     });
 
@@ -38,9 +39,12 @@ describe('home', () => {
       });
 
       const request: Request = fromPartial({});
+      const url = new URL('https://example.com');
 
-      await expect(loader(fromPartial({ request }), serversService, authHelper)).rejects.toEqual(redirect('/login'));
-      expect(getSession).toHaveBeenCalledWith(request, '/login');
+      await expect(loader(fromPartial({ request, url }), serversService, authHelper)).rejects.toEqual(
+        redirect('/login'),
+      );
+      expect(getSession).toHaveBeenCalledWith(request, url, '/login');
       expect(getUserServers).not.toHaveBeenCalled();
     });
   });

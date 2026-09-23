@@ -19,19 +19,19 @@ export class FavoritesService {
   }
 
   async getFavorites(userPublicId: string, serverPublicId: string): Promise<Favorite[]> {
-    return this.#em.find(Favorite, {
-      user: { publicId: userPublicId },
-      server: { publicId: serverPublicId },
-    }, {
-      orderBy: { createdAt: 'DESC' },
-    });
+    return this.#em.find(
+      Favorite,
+      {
+        user: { publicId: userPublicId },
+        server: { publicId: serverPublicId },
+      },
+      {
+        orderBy: { createdAt: 'DESC' },
+      },
+    );
   }
 
-  async addFavorite(
-    userPublicId: string,
-    serverPublicId: string,
-    input: CreateFavoriteInput,
-  ): Promise<Favorite> {
+  async addFavorite(userPublicId: string, serverPublicId: string, input: CreateFavoriteInput): Promise<Favorite> {
     const [user, server] = await Promise.all([
       this.#em.findOneOrFail(User, { publicId: userPublicId }),
       this.#em.findOneOrFail(Server, { publicId: serverPublicId }),
@@ -69,11 +69,7 @@ export class FavoritesService {
     return favorite;
   }
 
-  async removeFavorite(
-    userPublicId: string,
-    serverPublicId: string,
-    shortUrlId: string,
-  ): Promise<boolean> {
+  async removeFavorite(userPublicId: string, serverPublicId: string, shortUrlId: string): Promise<boolean> {
     const favorite = await this.#em.findOne(Favorite, {
       user: { publicId: userPublicId },
       server: { publicId: serverPublicId },
@@ -84,15 +80,11 @@ export class FavoritesService {
       return false;
     }
 
-    await this.#em.removeAndFlush(favorite);
+    await this.#em.remove(favorite).flush();
     return true;
   }
 
-  async isFavorite(
-    userPublicId: string,
-    serverPublicId: string,
-    shortUrlId: string,
-  ): Promise<boolean> {
+  async isFavorite(userPublicId: string, serverPublicId: string, shortUrlId: string): Promise<boolean> {
     const count = await this.#em.count(Favorite, {
       user: { publicId: userPublicId },
       server: { publicId: serverPublicId },

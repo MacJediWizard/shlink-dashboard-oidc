@@ -8,19 +8,23 @@ describe('profile', () => {
   describe('<Profile />', () => {
     const setUp = (isOidcUser = false, displayName?: string) => {
       const path = '/profile';
-      const Stub = createRoutesStub([{
-        path,
-        Component: Profile,
-        HydrateFallback: () => null,
-      }]);
+      const Stub = createRoutesStub([
+        {
+          path,
+          Component: Profile,
+          HydrateFallback: () => null,
+        },
+      ]);
 
       return render(
-        <SessionProvider value={fromPartial({
-          isOidcUser,
-          displayName,
-          username: 'testuser',
-          role: 'admin',
-        })}>
+        <SessionProvider
+          value={fromPartial({
+            isOidcUser,
+            displayName,
+            username: 'testuser',
+            role: 'admin',
+          })}
+        >
           <Stub initialEntries={[path]} />
         </SessionProvider>,
       );

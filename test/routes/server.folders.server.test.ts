@@ -195,9 +195,7 @@ describe('server.$serverId.folders', () => {
     });
 
     it('gets folders for URL', async () => {
-      const folders = [
-        { id: 1, name: 'Folder 1', color: '#ff0000' },
-      ];
+      const folders = [{ id: 1, name: 'Folder 1', color: '#ff0000' }];
       getFoldersForShortUrl.mockResolvedValue(folders);
 
       const args = fromPartial<ActionFunctionArgs>({

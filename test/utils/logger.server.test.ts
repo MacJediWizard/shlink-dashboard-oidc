@@ -29,9 +29,7 @@ describe('logger', () => {
 
       logger.info('Test message');
 
-      expect(consoleSpy.info).toHaveBeenCalledWith(
-        expect.stringContaining('[INFO] [TestComponent] Test message'),
-      );
+      expect(consoleSpy.info).toHaveBeenCalledWith(expect.stringContaining('[INFO] [TestComponent] Test message'));
     });
 
     it('includes timestamp in log messages', () => {
@@ -39,9 +37,7 @@ describe('logger', () => {
 
       logger.info('Test message');
 
-      expect(consoleSpy.info).toHaveBeenCalledWith(
-        expect.stringMatching(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/),
-      );
+      expect(consoleSpy.info).toHaveBeenCalledWith(expect.stringMatching(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/));
     });
 
     it('includes data in log messages when provided', () => {
@@ -49,9 +45,7 @@ describe('logger', () => {
 
       logger.info('Test message', { key: 'value', num: 123 });
 
-      expect(consoleSpy.info).toHaveBeenCalledWith(
-        expect.stringContaining('{"key":"value","num":123}'),
-      );
+      expect(consoleSpy.info).toHaveBeenCalledWith(expect.stringContaining('{"key":"value","num":123}'));
     });
   });
 
@@ -79,9 +73,7 @@ describe('logger', () => {
 
       logger.info('Info message');
 
-      expect(consoleSpy.info).toHaveBeenCalledWith(
-        expect.stringContaining('[INFO] [Test] Info message'),
-      );
+      expect(consoleSpy.info).toHaveBeenCalledWith(expect.stringContaining('[INFO] [Test] Info message'));
     });
 
     it('logs warn messages', () => {
@@ -89,9 +81,7 @@ describe('logger', () => {
 
       logger.warn('Warning message');
 
-      expect(consoleSpy.warn).toHaveBeenCalledWith(
-        expect.stringContaining('[WARN] [Test] Warning message'),
-      );
+      expect(consoleSpy.warn).toHaveBeenCalledWith(expect.stringContaining('[WARN] [Test] Warning message'));
     });
 
     it('logs error messages', () => {
@@ -99,9 +89,7 @@ describe('logger', () => {
 
       logger.error('Error message');
 
-      expect(consoleSpy.error).toHaveBeenCalledWith(
-        expect.stringContaining('[ERROR] [Test] Error message'),
-      );
+      expect(consoleSpy.error).toHaveBeenCalledWith(expect.stringContaining('[ERROR] [Test] Error message'));
     });
   });
 });

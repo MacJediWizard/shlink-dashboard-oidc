@@ -17,15 +17,17 @@ describe('logout', () => {
   const logout = vi.fn();
   const authHelper = fromPartial<AuthHelper>({ logout });
 
-  const buildRequest = () => fromPartial<Request>({
-    headers: new Headers(),
-  });
+  const buildRequest = () =>
+    fromPartial<Request>({
+      headers: new Headers(),
+    });
 
-  const buildLoaderArgs = (request: Request): LoaderFunctionArgs => fromPartial({
-    request,
-    context: new Map(),
-    params: {},
-  });
+  const buildLoaderArgs = (request: Request): LoaderFunctionArgs =>
+    fromPartial({
+      request,
+      context: new Map(),
+      params: {},
+    });
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -77,7 +79,9 @@ describe('logout', () => {
     const response = await logoutLoader(buildLoaderArgs(request), authHelper);
 
     expect(logout).toHaveBeenCalledWith(request);
-    expect(response.headers.get('Location')).toBe('https://auth.example.com/logout?redirect=https://app.example.com/login');
+    expect(response.headers.get('Location')).toBe(
+      'https://auth.example.com/logout?redirect=https://app.example.com/login',
+    );
     expect(response.headers.get('Set-Cookie')).toBe('session=; Max-Age=0');
   });
 

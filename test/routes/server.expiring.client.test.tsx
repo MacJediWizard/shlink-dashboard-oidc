@@ -15,7 +15,7 @@ describe('ExpiringUrls', () => {
     const Stub = createRoutesStub([
       {
         path: '/',
-        Component: () => <ExpiringUrls loaderData={loaderData as any} />,
+        Component: () => <ExpiringUrls loaderData={loaderData as any} params={{} as any} />,
       },
     ]);
     return renderWithEvents(<Stub initialEntries={['/']} />);
@@ -150,10 +150,9 @@ describe('ExpiringUrls', () => {
 
   it('shows back to server link', async () => {
     setUp();
-    await waitFor(() => expect(screen.getByRole('link', { name: /Back to Server/ })).toHaveAttribute(
-      'href',
-      '/server/server-1',
-    ));
+    await waitFor(() =>
+      expect(screen.getByRole('link', { name: /Back to Server/ })).toHaveAttribute('href', '/server/server-1'),
+    );
   });
 
   it('displays long URL without title', async () => {

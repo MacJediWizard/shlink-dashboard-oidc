@@ -132,12 +132,7 @@ export async function action(
         return Response.json({ error: 'Missing required fields' }, { status: 400 });
       }
 
-      const removed = await foldersService.removeFromFolder(
-        folderId,
-        session.publicId,
-        serverId,
-        shortUrlId,
-      );
+      const removed = await foldersService.removeFromFolder(folderId, session.publicId, serverId, shortUrlId);
 
       if (!removed) {
         return Response.json({ error: 'Item not found' }, { status: 404 });
@@ -152,11 +147,7 @@ export async function action(
         return Response.json({ error: 'Short URL ID required' }, { status: 400 });
       }
 
-      const folders = await foldersService.getFoldersForShortUrl(
-        session.publicId,
-        serverId,
-        shortUrlId,
-      );
+      const folders = await foldersService.getFoldersForShortUrl(session.publicId, serverId, shortUrlId);
 
       return Response.json({
         folders: folders.map((f) => ({

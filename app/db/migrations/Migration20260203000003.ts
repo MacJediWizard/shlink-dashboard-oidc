@@ -1,52 +1,69 @@
 import { Migration } from '@mikro-orm/migrations';
+import type { ColumnDefinitionBuilder } from 'kysely';
 
 export class Migration20260203000003 extends Migration {
   override async up(): Promise<void> {
-    const knex = this.getKnex();
+    const kysely = this.getEntityManager().getKysely();
+    const { idType, idColBuilder, fkType, dateType } = this.columnTypes();
 
-    await knex.schema.createTable('folders', (table) => {
-      table.increments('id').unsigned().primary();
-      table.string('name', 255).notNullable();
-      table.string('color', 7).nullable();
-      table.dateTime('created_at').notNullable();
-      table.integer('user_id').unsigned().notNullable();
-      table.integer('server_id').unsigned().notNullable();
+    await kysely.schema
+      .createTable('folders')
+      .addColumn('id', idType, idColBuilder)
+      .addColumn('name', 'varchar(255)', (column) => column.notNull())
+      .addColumn('color', 'varchar(7)')
+      .addColumn('created_at', dateType, (column) => column.notNull())
+      .addColumn('user_id', fkType, (column) => column.notNull())
+      .addColumn('server_id', fkType, (column) => column.notNull())
+      .addForeignKeyConstraint('fk_folder_user', ['user_id'], 'users', ['id'], (constraint) =>
+        constraint.onDelete('cascade'),
+      )
+      .addForeignKeyConstraint('fk_folder_server', ['server_id'], 'servers', ['id'], (constraint) =>
+        constraint.onDelete('cascade'),
+      )
+      .addUniqueConstraint('idx_folder_user_server_name', ['user_id', 'server_id', 'name'])
+      .execute();
 
-      table.foreign('user_id', 'fk_folder_user')
-        .references('id')
-        .inTable('users')
-        .onDelete('CASCADE');
-      table.foreign('server_id', 'fk_folder_server')
-        .references('id')
-        .inTable('servers')
-        .onDelete('CASCADE');
-
-      table.unique(['user_id', 'server_id', 'name'], {
-        indexName: 'idx_folder_user_server_name',
-      });
-    });
-
-    await knex.schema.createTable('folder_items', (table) => {
-      table.increments('id').unsigned().primary();
-      table.string('short_url_id', 255).notNullable();
-      table.string('short_code', 255).notNullable();
-      table.dateTime('added_at').notNullable();
-      table.integer('folder_id').unsigned().notNullable();
-
-      table.foreign('folder_id', 'fk_folder_item_folder')
-        .references('id')
-        .inTable('folders')
-        .onDelete('CASCADE');
-
-      table.unique(['folder_id', 'short_url_id'], {
-        indexName: 'idx_folder_item_folder_shorturl',
-      });
-    });
+    await kysely.schema
+      .createTable('folder_items')
+      .addColumn('id', idType, idColBuilder)
+      .addColumn('short_url_id', 'varchar(255)', (column) => column.notNull())
+      .addColumn('short_code', 'varchar(255)', (column) => column.notNull())
+      .addColumn('added_at', dateType, (column) => column.notNull())
+      .addColumn('folder_id', fkType, (column) => column.notNull())
+      .addForeignKeyConstraint('fk_folder_item_folder', ['folder_id'], 'folders', ['id'], (constraint) =>
+        constraint.onDelete('cascade'),
+      )
+      .addUniqueConstraint('idx_folder_item_folder_shorturl', ['folder_id', 'short_url_id'])
+      .execute();
   }
 
   override async down(): Promise<void> {
-    const knex = this.getKnex();
-    await knex.schema.dropTable('folder_items');
-    await knex.schema.dropTable('folders');
+    const kysely = this.getEntityManager().getKysely();
+    await kysely.schema.dropTable('folder_items').execute();
+    await kysely.schema.dropTable('folders').execute();
+  }
+
+  private columnTypes() {
+    const driverName = this.getEntityManager().getDriver().constructor.name.toLowerCase();
+    const isPostgres = driverName.includes('postgres');
+    const isSqlite = driverName.includes('sqlite');
+    const isMicrosoft = driverName.includes('mssql');
+
+    return {
+      idType: isPostgres ? 'serial' : 'integer',
+      idColBuilder: (column: ColumnDefinitionBuilder) => {
+        if (isPostgres) {
+          // In postgres, autoincrement is implicit by the serial type
+          return column.primaryKey();
+        }
+        if (isMicrosoft) {
+          return column.identity().primaryKey();
+        }
+        return column.autoIncrement().primaryKey();
+      },
+      fkType: isSqlite ? 'integer' : 'bigint',
+      dateType: isPostgres ? 'timestamp' : 'datetime',
+      jsonType: isMicrosoft ? 'text' : 'json',
+    } as const;
   }
 }

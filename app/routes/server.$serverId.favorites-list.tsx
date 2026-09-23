@@ -130,8 +130,8 @@ export default function FavoritesList({ loaderData }: RouteComponentProps<Route.
         shortUrlId,
         shortCode: newShortCode.trim(),
         longUrl: newLongUrl.trim(),
-        title: newTitle.trim() || undefined,
-        notes: newNotes.trim() || undefined,
+        ...(newTitle.trim() ? { title: newTitle.trim() } : {}),
+        ...(newNotes.trim() ? { notes: newNotes.trim() } : {}),
       },
       {
         method: 'POST',
@@ -195,7 +195,9 @@ export default function FavoritesList({ loaderData }: RouteComponentProps<Route.
         <SimpleCard title="Add New Favorite" bodyClassName="flex flex-col gap-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="shortCode" className="block text-sm font-medium mb-1">Short Code *</label>
+              <label htmlFor="shortCode" className="block text-sm font-medium mb-1">
+                Short Code *
+              </label>
               <div className="flex items-center">
                 <span className="px-3 py-2 bg-gray-200 dark:bg-gray-700 rounded-l border border-r-0 border-gray-300 dark:border-gray-600 text-sm">
                   {serverBaseUrl}/

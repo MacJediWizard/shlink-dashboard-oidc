@@ -3,8 +3,8 @@ import { z } from 'zod';
 const supportedDbEngines = ['mysql', 'postgres', 'mariadb', 'sqlite', 'mssql'] as const;
 const supportedRoles = ['admin', 'advanced-user', 'managed-user'] as const;
 
-export type DbEngine = typeof supportedDbEngines[number];
-export type Role = typeof supportedRoles[number];
+export type DbEngine = (typeof supportedDbEngines)[number];
+export type Role = (typeof supportedRoles)[number];
 
 const envVariables = z.object({
   NODE_ENV: z.enum(['production', 'development', 'test']).optional(),
@@ -19,10 +19,13 @@ const envVariables = z.object({
   SHLINK_DASHBOARD_DB_USE_ENCRYPTION: z.stringbool({ truthy: ['true'] }).optional(),
 
   // Sessions
-  SHLINK_DASHBOARD_SESSION_SECRETS: z.string().transform(
-    // Split the comma-separated list of secrets
-    (secrets) => secrets.split(',').map((v) => v.trim()),
-  ).optional(),
+  SHLINK_DASHBOARD_SESSION_SECRETS: z
+    .string()
+    .transform(
+      // Split the comma-separated list of secrets
+      (secrets) => secrets.split(',').map((v) => v.trim()),
+    )
+    .optional(),
 
   // OIDC Configuration
   SHLINK_DASHBOARD_OIDC_ENABLED: z.stringbool({ truthy: ['true'] }).optional(),
@@ -35,12 +38,18 @@ const envVariables = z.object({
   SHLINK_DASHBOARD_OIDC_ADVANCED_GROUP: z.string().optional(),
   SHLINK_DASHBOARD_OIDC_DEFAULT_ROLE: z.enum(supportedRoles).optional().default('managed-user'),
   SHLINK_DASHBOARD_OIDC_PROVIDER_NAME: z.string().optional().default('SSO'),
-  SHLINK_DASHBOARD_LOCAL_AUTH_ENABLED: z.stringbool({ truthy: ['true'] }).optional().default(true),
+  SHLINK_DASHBOARD_LOCAL_AUTH_ENABLED: z
+    .stringbool({ truthy: ['true'] })
+    .optional()
+    .default(true),
 
   // Branding Configuration
   SHLINK_DASHBOARD_TITLE: z.string().optional().default('Shlink'),
   SHLINK_DASHBOARD_LOGO_URL: z.string().url().optional(),
-  SHLINK_DASHBOARD_BRAND_COLOR: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
+  SHLINK_DASHBOARD_BRAND_COLOR: z
+    .string()
+    .regex(/^#[0-9A-Fa-f]{6}$/)
+    .optional(),
 });
 
 export const env = envVariables.parse(process.env);
@@ -75,8 +84,8 @@ export const getOidcConfig = () => {
   if (!issuerUrl || !clientId || !clientSecret || !redirectUri) {
     throw new Error(
       'OIDC is enabled but missing required configuration. ' +
-      'Please set SHLINK_DASHBOARD_OIDC_ISSUER_URL, SHLINK_DASHBOARD_OIDC_CLIENT_ID, ' +
-      'SHLINK_DASHBOARD_OIDC_CLIENT_SECRET, and SHLINK_DASHBOARD_OIDC_REDIRECT_URI.',
+        'Please set SHLINK_DASHBOARD_OIDC_ISSUER_URL, SHLINK_DASHBOARD_OIDC_CLIENT_ID, ' +
+        'SHLINK_DASHBOARD_OIDC_CLIENT_SECRET, and SHLINK_DASHBOARD_OIDC_REDIRECT_URI.',
     );
   }
 

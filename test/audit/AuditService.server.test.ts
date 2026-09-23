@@ -101,11 +101,7 @@ describe('AuditService', () => {
 
       await auditService.getAuditLogs({ action: 'login' });
 
-      expect(find).toHaveBeenCalledWith(
-        AuditLog,
-        { action: 'login' },
-        expect.anything(),
-      );
+      expect(find).toHaveBeenCalledWith(AuditLog, { action: 'login' }, expect.anything());
     });
 
     it('filters by userId', async () => {
@@ -114,11 +110,7 @@ describe('AuditService', () => {
 
       await auditService.getAuditLogs({ userId: 'user-1' });
 
-      expect(find).toHaveBeenCalledWith(
-        AuditLog,
-        { user: { publicId: 'user-1' } },
-        expect.anything(),
-      );
+      expect(find).toHaveBeenCalledWith(AuditLog, { user: { publicId: 'user-1' } }, expect.anything());
     });
 
     it('filters by date range', async () => {
@@ -129,11 +121,7 @@ describe('AuditService', () => {
 
       await auditService.getAuditLogs({ startDate, endDate });
 
-      expect(find).toHaveBeenCalledWith(
-        AuditLog,
-        { createdAt: { $gte: startDate, $lte: endDate } },
-        expect.anything(),
-      );
+      expect(find).toHaveBeenCalledWith(AuditLog, { createdAt: { $gte: startDate, $lte: endDate } }, expect.anything());
     });
 
     it('uses default pagination', async () => {

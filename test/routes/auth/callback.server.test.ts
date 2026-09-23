@@ -36,11 +36,12 @@ describe('auth/callback', () => {
     });
   };
 
-  const buildLoaderArgs = (request: Request): LoaderFunctionArgs => fromPartial({
-    request,
-    context: new Map(),
-    params: {},
-  });
+  const buildLoaderArgs = (request: Request): LoaderFunctionArgs =>
+    fromPartial({
+      request,
+      context: new Map(),
+      params: {},
+    });
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -58,7 +59,9 @@ describe('auth/callback', () => {
 
     it('redirects to login with error when OIDC provider returns error', async () => {
       mockedIsOidcEnabled.mockReturnValue(true);
-      const request = buildRequest('https://example.com/auth/callback?error=access_denied&error_description=User%20denied');
+      const request = buildRequest(
+        'https://example.com/auth/callback?error=access_denied&error_description=User%20denied',
+      );
 
       const response = await loader(buildLoaderArgs(request), authHelper, usersService);
 
@@ -94,10 +97,7 @@ describe('auth/callback', () => {
 
     it('redirects to login with error when OIDC state cookie is invalid JSON', async () => {
       mockedIsOidcEnabled.mockReturnValue(true);
-      const request = buildRequest(
-        'https://example.com/auth/callback?code=abc&state=xyz',
-        'oidc_state=invalid-json',
-      );
+      const request = buildRequest('https://example.com/auth/callback?code=abc&state=xyz', 'oidc_state=invalid-json');
 
       const response = await loader(buildLoaderArgs(request), authHelper, usersService);
 
@@ -164,13 +164,7 @@ describe('auth/callback', () => {
 
       const response = await loader(buildLoaderArgs(request), authHelper, usersService);
 
-      expect(mockedExchangeCodeForTokens).toHaveBeenCalledWith(
-        'abc',
-        'xyz',
-        'xyz',
-        'nonce123',
-        'verifier123',
-      );
+      expect(mockedExchangeCodeForTokens).toHaveBeenCalledWith('abc', 'xyz', 'xyz', 'nonce123', 'verifier123');
       expect(findOrCreateFromOidcClaims).toHaveBeenCalledWith({
         sub: 'user-123',
         email: 'user@example.com',

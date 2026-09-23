@@ -19,9 +19,9 @@ describe('oidc.server', () => {
   const mockRandomPKCECodeVerifier = vi.fn().mockReturnValue('mock-verifier');
   const mockDiscovery = vi.fn();
   const mockCalculatePKCECodeChallenge = vi.fn().mockResolvedValue('mock-challenge');
-  const mockBuildAuthorizationUrl = vi.fn().mockReturnValue(
-    new URL('https://auth.example.com/authorize?client_id=test'),
-  );
+  const mockBuildAuthorizationUrl = vi
+    .fn()
+    .mockReturnValue(new URL('https://auth.example.com/authorize?client_id=test'));
   const mockAuthorizationCodeGrant = vi.fn();
   const mockGetOidcConfig = vi.fn();
   const mockIsOidcEnabled = vi.fn();
@@ -192,11 +192,7 @@ describe('oidc.server', () => {
       const oidcState = { state: 'state', nonce: 'nonce', codeVerifier: 'verifier' };
       await buildAuthorizationUrl(oidcState);
 
-      expect(mockDiscovery).toHaveBeenCalledWith(
-        new URL('https://auth.example.com'),
-        'client-id',
-        'secret',
-      );
+      expect(mockDiscovery).toHaveBeenCalledWith(new URL('https://auth.example.com'), 'client-id', 'secret');
     });
   });
 
@@ -207,31 +203,29 @@ describe('oidc.server', () => {
     it('throws error when state does not match', async () => {
       const { exchangeCodeForTokens } = await import('../../app/auth/oidc.server');
 
-      await expect(
-        exchangeCodeForTokens('code', 'wrong-state', 'expected-state', 'nonce', 'verifier'),
-      ).rejects.toThrow('Invalid state parameter');
+      await expect(exchangeCodeForTokens('code', 'wrong-state', 'expected-state', 'nonce', 'verifier')).rejects.toThrow(
+        'Invalid state parameter',
+      );
     });
 
     it('throws error when OIDC is not enabled', async () => {
       mockGetOidcConfig.mockReturnValue(null);
       const { exchangeCodeForTokens } = await import('../../app/auth/oidc.server');
 
-      await expect(
-        exchangeCodeForTokens('code', 'state', 'state', 'nonce', 'verifier'),
-      ).rejects.toThrow('OIDC is not enabled');
+      await expect(exchangeCodeForTokens('code', 'state', 'state', 'nonce', 'verifier')).rejects.toThrow(
+        'OIDC is not enabled',
+      );
     });
 
     it('throws error when no claims in token', async () => {
       mockGetOidcConfig.mockReturnValue(defaultOidcConfig);
       mockDiscovery.mockResolvedValue(mockClientConfig);
-      mockAuthorizationCodeGrant.mockResolvedValue(
-        fromPartial({ claims: () => null }),
-      );
+      mockAuthorizationCodeGrant.mockResolvedValue(fromPartial({ claims: () => null }));
       const { exchangeCodeForTokens } = await import('../../app/auth/oidc.server');
 
-      await expect(
-        exchangeCodeForTokens('code', 'state', 'state', 'nonce', 'verifier'),
-      ).rejects.toThrow('No claims in ID token');
+      await expect(exchangeCodeForTokens('code', 'state', 'state', 'nonce', 'verifier')).rejects.toThrow(
+        'No claims in ID token',
+      );
     });
 
     it('throws error when token has expired', async () => {
@@ -249,9 +243,9 @@ describe('oidc.server', () => {
       );
       const { exchangeCodeForTokens } = await import('../../app/auth/oidc.server');
 
-      await expect(
-        exchangeCodeForTokens('code', 'state', 'state', 'nonce', 'verifier'),
-      ).rejects.toThrow('ID token has expired');
+      await expect(exchangeCodeForTokens('code', 'state', 'state', 'nonce', 'verifier')).rejects.toThrow(
+        'ID token has expired',
+      );
     });
 
     it('throws error when token issued in future', async () => {
@@ -269,9 +263,9 @@ describe('oidc.server', () => {
       );
       const { exchangeCodeForTokens } = await import('../../app/auth/oidc.server');
 
-      await expect(
-        exchangeCodeForTokens('code', 'state', 'state', 'nonce', 'verifier'),
-      ).rejects.toThrow('ID token issued in the future');
+      await expect(exchangeCodeForTokens('code', 'state', 'state', 'nonce', 'verifier')).rejects.toThrow(
+        'ID token issued in the future',
+      );
     });
 
     it('throws error when nonce does not match', async () => {
@@ -289,9 +283,9 @@ describe('oidc.server', () => {
       );
       const { exchangeCodeForTokens } = await import('../../app/auth/oidc.server');
 
-      await expect(
-        exchangeCodeForTokens('code', 'state', 'state', 'correct-nonce', 'verifier'),
-      ).rejects.toThrow('ID token nonce mismatch');
+      await expect(exchangeCodeForTokens('code', 'state', 'state', 'correct-nonce', 'verifier')).rejects.toThrow(
+        'ID token nonce mismatch',
+      );
     });
 
     it('returns claims on successful token exchange', async () => {
@@ -388,15 +382,11 @@ describe('oidc.server', () => {
 
       await exchangeCodeForTokens('auth-code', 'state-123', 'state-123', 'nonce-456', 'verifier-789');
 
-      expect(mockAuthorizationCodeGrant).toHaveBeenCalledWith(
-        mockClientConfig,
-        expect.any(URL),
-        {
-          pkceCodeVerifier: 'verifier-789',
-          expectedNonce: 'nonce-456',
-          expectedState: 'state-123',
-        },
-      );
+      expect(mockAuthorizationCodeGrant).toHaveBeenCalledWith(mockClientConfig, expect.any(URL), {
+        pkceCodeVerifier: 'verifier-789',
+        expectedNonce: 'nonce-456',
+        expectedState: 'state-123',
+      });
     });
   });
 

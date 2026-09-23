@@ -15,7 +15,7 @@ describe('FoldersList', () => {
     const Stub = createRoutesStub([
       {
         path: '/',
-        Component: () => <FoldersList loaderData={loaderData as any} />,
+        Component: () => <FoldersList loaderData={loaderData as any} params={{} as any} />,
       },
       {
         path: '/server/:serverId/folders',
@@ -61,10 +61,9 @@ describe('FoldersList', () => {
 
   it('shows back to server link', async () => {
     setUp();
-    await waitFor(() => expect(screen.getByRole('link', { name: /Back to Server/ })).toHaveAttribute(
-      'href',
-      '/server/server-1',
-    ));
+    await waitFor(() =>
+      expect(screen.getByRole('link', { name: /Back to Server/ })).toHaveAttribute('href', '/server/server-1'),
+    );
   });
 
   it('shows new folder button', async () => {
@@ -104,9 +103,7 @@ describe('FoldersList', () => {
           color: '#ff0000',
           createdAt: '2026-01-01T00:00:00.000Z',
           itemCount: 1,
-          items: [
-            { shortUrlId: 'url-1', shortCode: 'xyz', addedAt: '2026-01-01T00:00:00.000Z' },
-          ],
+          items: [{ shortUrlId: 'url-1', shortCode: 'xyz', addedAt: '2026-01-01T00:00:00.000Z' }],
         },
       ],
     };
@@ -115,9 +112,12 @@ describe('FoldersList', () => {
 
     await waitFor(() => expect(screen.getByText('Test Folder')).toBeInTheDocument());
     // Expand folder - find the expand button (button with chevron icon before folder name)
-    const expandButtons = screen.getAllByRole('button').filter(
-      (btn) => btn.querySelector('svg[data-icon="chevron-right"]') || btn.querySelector('svg[data-icon="chevron-down"]'),
-    );
+    const expandButtons = screen
+      .getAllByRole('button')
+      .filter(
+        (btn) =>
+          btn.querySelector('svg[data-icon="chevron-right"]') || btn.querySelector('svg[data-icon="chevron-down"]'),
+      );
     await user.click(expandButtons[0]!);
 
     await waitFor(() => expect(screen.getByText('xyz')).toBeInTheDocument());
@@ -142,9 +142,12 @@ describe('FoldersList', () => {
 
     await waitFor(() => expect(screen.getByText('Empty Folder')).toBeInTheDocument());
     // Expand folder - find the expand button (button with chevron icon)
-    const expandButtons = screen.getAllByRole('button').filter(
-      (btn) => btn.querySelector('svg[data-icon="chevron-right"]') || btn.querySelector('svg[data-icon="chevron-down"]'),
-    );
+    const expandButtons = screen
+      .getAllByRole('button')
+      .filter(
+        (btn) =>
+          btn.querySelector('svg[data-icon="chevron-right"]') || btn.querySelector('svg[data-icon="chevron-down"]'),
+      );
     await user.click(expandButtons[0]!);
 
     await waitFor(() => expect(screen.getByText('No URLs in this folder.')).toBeInTheDocument());
@@ -328,9 +331,7 @@ describe('FoldersList', () => {
           color: '#ff0000',
           createdAt: '2026-01-01T00:00:00.000Z',
           itemCount: 1,
-          items: [
-            { shortUrlId: 'url-1', shortCode: 'xyz', addedAt: '2026-01-01T00:00:00.000Z' },
-          ],
+          items: [{ shortUrlId: 'url-1', shortCode: 'xyz', addedAt: '2026-01-01T00:00:00.000Z' }],
         },
       ],
     };
@@ -340,9 +341,12 @@ describe('FoldersList', () => {
     await waitFor(() => expect(screen.getByText('Test Folder')).toBeInTheDocument());
 
     // Expand folder - find the expand button (button with chevron icon)
-    const expandButtons = screen.getAllByRole('button').filter(
-      (btn) => btn.querySelector('svg[data-icon="chevron-right"]') || btn.querySelector('svg[data-icon="chevron-down"]'),
-    );
+    const expandButtons = screen
+      .getAllByRole('button')
+      .filter(
+        (btn) =>
+          btn.querySelector('svg[data-icon="chevron-right"]') || btn.querySelector('svg[data-icon="chevron-down"]'),
+      );
     await user.click(expandButtons[0]!);
 
     await waitFor(() => expect(screen.getByText('xyz')).toBeInTheDocument());
