@@ -66,13 +66,7 @@ export async function loader(
 
   try {
     // Exchange code for tokens and get claims
-    const claims = await exchangeCodeForTokens(
-      code,
-      state,
-      oidcState.state,
-      oidcState.nonce,
-      oidcState.codeVerifier,
-    );
+    const claims = await exchangeCodeForTokens(code, state, oidcState.state, oidcState.nonce, oidcState.codeVerifier);
 
     // Find or create user from OIDC claims
     const user = await usersService.findOrCreateFromOidcClaims(claims);

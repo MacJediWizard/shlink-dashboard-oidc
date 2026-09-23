@@ -1,10 +1,11 @@
 import { redirect } from 'react-router';
+import type * as EnvServer from '../../../app/utils/env.server';
 
 const mockCanManageLocalUsers = vi.fn();
 
 // Mock env.server module with all required exports
 vi.mock('../../../app/utils/env.server', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../../../app/utils/env.server')>();
+  const actual = await importOriginal<typeof EnvServer>();
   return {
     ...actual,
     canManageLocalUsers: mockCanManageLocalUsers,

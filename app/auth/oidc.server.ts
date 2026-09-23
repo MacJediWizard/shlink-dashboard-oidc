@@ -28,11 +28,7 @@ async function getOidcClientConfig(): Promise<client.Configuration> {
     throw new Error('OIDC is not enabled');
   }
 
-  cachedConfig = await client.discovery(
-    new URL(config.issuerUrl),
-    config.clientId,
-    config.clientSecret,
-  );
+  cachedConfig = await client.discovery(new URL(config.issuerUrl), config.clientId, config.clientSecret);
 
   return cachedConfig;
 }

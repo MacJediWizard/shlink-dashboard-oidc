@@ -11,7 +11,7 @@ describe('FavoritesService', () => {
   const findOneOrFail = vi.fn();
   const persist = vi.fn();
   const flush = vi.fn();
-  const removeAndFlush = vi.fn();
+  const remove = vi.fn(() => ({ flush }));
   const count = vi.fn();
   const em = fromPartial<EntityManager>({
     find,
@@ -19,7 +19,7 @@ describe('FavoritesService', () => {
     findOneOrFail,
     persist,
     flush,
-    removeAndFlush,
+    remove,
     count,
   });
   let favoritesService: FavoritesService;
@@ -52,9 +52,7 @@ describe('FavoritesService', () => {
     it('creates a new favorite', async () => {
       const user = fromPartial<User>({ publicId: 'user-1' });
       const server = fromPartial<Server>({ publicId: 'server-1' });
-      findOneOrFail
-        .mockResolvedValueOnce(user)
-        .mockResolvedValueOnce(server);
+      findOneOrFail.mockResolvedValueOnce(user).mockResolvedValueOnce(server);
 
       const result = await favoritesService.addFavorite('user-1', 'server-1', {
         shortUrlId: 'url-1',
@@ -85,7 +83,8 @@ describe('FavoritesService', () => {
       const result = await favoritesService.removeFavorite('user-1', 'server-1', 'url-1');
 
       expect(result).toBe(true);
-      expect(removeAndFlush).toHaveBeenCalledWith(favorite);
+      expect(remove).toHaveBeenCalledWith(favorite);
+      expect(flush).toHaveBeenCalled();
     });
 
     it('returns false when favorite not found', async () => {
@@ -94,7 +93,7 @@ describe('FavoritesService', () => {
       const result = await favoritesService.removeFavorite('user-1', 'server-1', 'url-1');
 
       expect(result).toBe(false);
-      expect(removeAndFlush).not.toHaveBeenCalled();
+      expect(remove).not.toHaveBeenCalled();
     });
   });
 

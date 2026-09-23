@@ -11,14 +11,14 @@ describe('FoldersService', () => {
   const findOneOrFail = vi.fn();
   const persist = vi.fn();
   const flush = vi.fn();
-  const removeAndFlush = vi.fn();
+  const remove = vi.fn(() => ({ flush }));
   const em = fromPartial<EntityManager>({
     find,
     findOne,
     findOneOrFail,
     persist,
     flush,
-    removeAndFlush,
+    remove,
   });
   let foldersService: FoldersService;
 
@@ -66,9 +66,7 @@ describe('FoldersService', () => {
     it('creates a new folder', async () => {
       const user = fromPartial<User>({ publicId: 'user-1' });
       const server = fromPartial<Server>({ publicId: 'server-1' });
-      findOneOrFail
-        .mockResolvedValueOnce(user)
-        .mockResolvedValueOnce(server);
+      findOneOrFail.mockResolvedValueOnce(user).mockResolvedValueOnce(server);
       findOne.mockResolvedValue(null); // No existing folder
 
       const result = await foldersService.createFolder('user-1', 'server-1', {
@@ -88,14 +86,12 @@ describe('FoldersService', () => {
     it('throws error if folder name already exists', async () => {
       const user = fromPartial<User>({ publicId: 'user-1' });
       const server = fromPartial<Server>({ publicId: 'server-1' });
-      findOneOrFail
-        .mockResolvedValueOnce(user)
-        .mockResolvedValueOnce(server);
+      findOneOrFail.mockResolvedValueOnce(user).mockResolvedValueOnce(server);
       findOne.mockResolvedValue(fromPartial<Folder>({ id: '1' })); // Existing folder
 
-      await expect(
-        foldersService.createFolder('user-1', 'server-1', { name: 'Existing' }),
-      ).rejects.toThrow('A folder with this name already exists');
+      await expect(foldersService.createFolder('user-1', 'server-1', { name: 'Existing' })).rejects.toThrow(
+        'A folder with this name already exists',
+      );
     });
   });
 
@@ -171,7 +167,8 @@ describe('FoldersService', () => {
       const result = await foldersService.deleteFolder('1', 'user-1', 'server-1');
 
       expect(result).toBe(true);
-      expect(removeAndFlush).toHaveBeenCalledWith(folder);
+      expect(remove).toHaveBeenCalledWith(folder);
+      expect(flush).toHaveBeenCalled();
     });
 
     it('returns false when folder not found', async () => {
@@ -180,7 +177,7 @@ describe('FoldersService', () => {
       const result = await foldersService.deleteFolder('1', 'user-1', 'server-1');
 
       expect(result).toBe(false);
-      expect(removeAndFlush).not.toHaveBeenCalled();
+      expect(remove).not.toHaveBeenCalled();
     });
   });
 
@@ -207,9 +204,7 @@ describe('FoldersService', () => {
     it('returns existing item if already in folder', async () => {
       const folder = fromPartial<Folder>({ id: '1' });
       const existingItem = fromPartial<FolderItem>({ id: '1', shortUrlId: 'url-1' });
-      findOne
-        .mockResolvedValueOnce(folder)
-        .mockResolvedValueOnce(existingItem);
+      findOne.mockResolvedValueOnce(folder).mockResolvedValueOnce(existingItem);
 
       const result = await foldersService.addToFolder('1', 'user-1', 'server-1', {
         shortUrlId: 'url-1',
@@ -237,14 +232,13 @@ describe('FoldersService', () => {
     it('removes item and returns true', async () => {
       const folder = fromPartial<Folder>({ id: '1' });
       const item = fromPartial<FolderItem>({ id: '1' });
-      findOne
-        .mockResolvedValueOnce(folder)
-        .mockResolvedValueOnce(item);
+      findOne.mockResolvedValueOnce(folder).mockResolvedValueOnce(item);
 
       const result = await foldersService.removeFromFolder('1', 'user-1', 'server-1', 'url-1');
 
       expect(result).toBe(true);
-      expect(removeAndFlush).toHaveBeenCalledWith(item);
+      expect(remove).toHaveBeenCalledWith(item);
+      expect(flush).toHaveBeenCalled();
     });
 
     it('returns false when folder not found', async () => {
@@ -257,9 +251,7 @@ describe('FoldersService', () => {
 
     it('returns false when item not found', async () => {
       const folder = fromPartial<Folder>({ id: '1' });
-      findOne
-        .mockResolvedValueOnce(folder)
-        .mockResolvedValueOnce(null);
+      findOne.mockResolvedValueOnce(folder).mockResolvedValueOnce(null);
 
       const result = await foldersService.removeFromFolder('1', 'user-1', 'server-1', 'url-1');
 
@@ -271,10 +263,7 @@ describe('FoldersService', () => {
     it('returns folders containing the short URL', async () => {
       const folder1 = fromPartial<Folder>({ id: '1', name: 'Folder 1' });
       const folder2 = fromPartial<Folder>({ id: '2', name: 'Folder 2' });
-      const items = [
-        fromPartial<FolderItem>({ folder: folder1 }),
-        fromPartial<FolderItem>({ folder: folder2 }),
-      ];
+      const items = [fromPartial<FolderItem>({ folder: folder1 }), fromPartial<FolderItem>({ folder: folder2 })];
       find.mockResolvedValue(items);
 
       const result = await foldersService.getFoldersForShortUrl('user-1', 'server-1', 'url-1');

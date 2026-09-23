@@ -1,4 +1,4 @@
-FROM node:25.5-slim AS builder
+FROM node:26.5-slim AS builder
 ARG VERSION="latest"
 ENV VERSION=${VERSION}
 
@@ -18,7 +18,7 @@ RUN npm ci && node --run build
 RUN rm -rf node_modules && npm ci --omit=dev && npm cache clean --force
 
 
-FROM node:25.5-slim
+FROM node:26.5-slim
 ARG UID=101
 ARG VERSION="latest"
 ENV VERSION=${VERSION}
@@ -33,6 +33,7 @@ ENV TINI_VERSION="v0.19.0"
 USER root
 COPY --from=builder /shlink-dashboard/build /shlink-dashboard
 COPY --from=builder /shlink-dashboard/node_modules /shlink-dashboard/node_modules
+COPY tsconfig.json /shlink-dashboard/tsconfig.json
 COPY package.json /shlink-dashboard/package.json
 COPY package-lock.json /shlink-dashboard/package-lock.json
 COPY LICENSE /shlink-dashboard/LICENSE

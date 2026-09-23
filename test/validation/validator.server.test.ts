@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { validateFormDataSchema, validateSchema } from '../../app/validation/validator.server';
 import { ValidationError } from '../../app/validation/ValidationError.server';
+import { validateFormDataSchema, validateSchema } from '../../app/validation/validator.server';
 
 describe('validator.server', () => {
   describe('validateSchema', () => {
@@ -16,8 +16,7 @@ describe('validator.server', () => {
     });
 
     it('throws ValidationError when schema validation fails', () => {
-      expect(() => validateSchema(schema, { name: '', age: -5 }))
-        .toThrow(ValidationError);
+      expect(() => validateSchema(schema, { name: '', age: -5 })).toThrow(ValidationError);
     });
 
     it('re-throws non-ZodError exceptions', () => {
@@ -28,8 +27,7 @@ describe('validator.server', () => {
         },
       } as any;
 
-      expect(() => validateSchema(badSchema, {}))
-        .toThrow('Unexpected error');
+      expect(() => validateSchema(badSchema, {})).toThrow('Unexpected error');
     });
   });
 
@@ -51,8 +49,7 @@ describe('validator.server', () => {
       const formData = new FormData();
       formData.append('username', '');
 
-      expect(() => validateFormDataSchema(schema, formData))
-        .toThrow(ValidationError);
+      expect(() => validateFormDataSchema(schema, formData)).toThrow(ValidationError);
     });
   });
 });

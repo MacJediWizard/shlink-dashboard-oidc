@@ -1,5 +1,5 @@
-import { fromPartial } from '@total-typescript/shoehorn';
 import type { EntityManager } from '@mikro-orm/core';
+import { fromPartial } from '@total-typescript/shoehorn';
 import type { User } from '../../app/entities/User';
 import { UsersRepository } from '../../app/users/UsersRepository.server';
 
@@ -22,7 +22,7 @@ describe('UsersRepository', () => {
       findAndCount,
       create,
       em,
-    });
+    } as any);
     // Bind the actual methods to the mocked repo
     Object.assign(repo, {
       findAndCountUsers: UsersRepository.prototype.findAndCountUsers.bind(repo),
@@ -59,7 +59,7 @@ describe('UsersRepository', () => {
 
       expect(findAndCount).toHaveBeenCalledWith(
         expect.objectContaining({
-          '$or': expect.any(Array),
+          $or: expect.any(Array),
         }),
         expect.any(Object),
       );
@@ -101,15 +101,17 @@ describe('UsersRepository', () => {
 
       const result = await repo.createUser(userData);
 
-      expect(create).toHaveBeenCalledWith(expect.objectContaining({
-        username: 'newuser',
-        displayName: 'New User',
-        role: 'managed-user',
-        password: 'hashed-password',
-        tempPassword: true,
-        createdAt: expect.any(Date),
-        publicId: expect.any(String),
-      }));
+      expect(create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          username: 'newuser',
+          displayName: 'New User',
+          role: 'managed-user',
+          password: 'hashed-password',
+          tempPassword: true,
+          createdAt: expect.any(Date),
+          publicId: expect.any(String),
+        }),
+      );
       expect(persist).toHaveBeenCalledWith(newUser);
       expect(result).toEqual(newUser);
     });
@@ -134,16 +136,18 @@ describe('UsersRepository', () => {
 
       const result = await repo.createOidcUser(userData);
 
-      expect(create).toHaveBeenCalledWith(expect.objectContaining({
-        username: 'oidcuser',
-        displayName: 'OIDC User',
-        role: 'managed-user',
-        oidcSubject: 'oidc-sub-123',
-        password: 'hashed-random-password',
-        tempPassword: false,
-        createdAt: expect.any(Date),
-        publicId: expect.any(String),
-      }));
+      expect(create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          username: 'oidcuser',
+          displayName: 'OIDC User',
+          role: 'managed-user',
+          oidcSubject: 'oidc-sub-123',
+          password: 'hashed-random-password',
+          tempPassword: false,
+          createdAt: expect.any(Date),
+          publicId: expect.any(String),
+        }),
+      );
       expect(persist).toHaveBeenCalledWith(newUser);
       expect(result).toEqual(newUser);
     });
@@ -166,9 +170,11 @@ describe('UsersRepository', () => {
 
       const result = await repo.createOidcUser(userData);
 
-      expect(create).toHaveBeenCalledWith(expect.objectContaining({
-        displayName: null,
-      }));
+      expect(create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          displayName: null,
+        }),
+      );
       expect(result).toEqual(newUser);
     });
   });

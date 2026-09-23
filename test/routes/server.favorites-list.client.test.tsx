@@ -15,7 +15,7 @@ describe('FavoritesList', () => {
     const Stub = createRoutesStub([
       {
         path: '/',
-        Component: () => <FavoritesList loaderData={loaderData as any} />,
+        Component: () => <FavoritesList loaderData={loaderData as any} params={{} as any} />,
       },
       {
         path: '/server/:serverId/favorites',
@@ -59,10 +59,9 @@ describe('FavoritesList', () => {
 
   it('shows back to server link', async () => {
     setUp();
-    await waitFor(() => expect(screen.getByRole('link', { name: /Back to Server/ })).toHaveAttribute(
-      'href',
-      '/server/server-1',
-    ));
+    await waitFor(() =>
+      expect(screen.getByRole('link', { name: /Back to Server/ })).toHaveAttribute('href', '/server/server-1'),
+    );
   });
 
   it('shows add notes prompt when no notes', async () => {

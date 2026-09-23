@@ -83,9 +83,7 @@ export default function AuditLog({ loaderData }: RouteComponentProps<Route.Compo
                   <Table.Cell>{formatDate(log.createdAt)}</Table.Cell>
                   <Table.Cell>{log.username}</Table.Cell>
                   <Table.Cell>{formatAction(log.action)}</Table.Cell>
-                  <Table.Cell>
-                    {log.resourceType ? `${log.resourceType}: ${log.resourceId ?? 'N/A'}` : '-'}
-                  </Table.Cell>
+                  <Table.Cell>{log.resourceType ? `${log.resourceType}: ${log.resourceId ?? 'N/A'}` : '-'}</Table.Cell>
                   <Table.Cell>{log.serverName ?? '-'}</Table.Cell>
                   <Table.Cell>{log.ipAddress ?? '-'}</Table.Cell>
                 </Table.Row>

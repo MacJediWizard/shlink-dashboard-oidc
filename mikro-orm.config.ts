@@ -11,12 +11,12 @@ import baseConfig from './migrations.config';
 
 const isProduction = isProd();
 
-async function resolveOptions(): Promise<Options> {
+async function resolveOptions(): Promise<Partial<Options>> {
   return {
     ...baseConfig,
     entities: [User, Settings, Server, Tag, AuditLog, Favorite, Folder, FolderItem],
     debug: !isProduction,
-  } satisfies Options;
+  } satisfies Partial<Options>;
 }
 
 export default await resolveOptions();
