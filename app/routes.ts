@@ -20,6 +20,7 @@ export default [
     route('folders-list', './routes/server.$serverId.folders-list.tsx'),
     route('expiring', './routes/server.$serverId.expiring.tsx'),
     route('expiring-list', './routes/server.$serverId.expiring-list.tsx'),
+    route('pixels', './routes/server.$serverId.pixels.tsx'),
     route('*', './routes/shlink-component-wrapper.tsx'),
   ]),
 
